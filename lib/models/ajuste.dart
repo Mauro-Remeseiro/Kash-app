@@ -1,9 +1,10 @@
 /// Claves conocidas de la tabla `ajustes`.
 class ClaveAjuste {
-  static const String modoApp = 'modo_app';
-  static const String tema = 'tema';
-  static const String presupuestoMensual = 'presupuesto_mensual';
-  static const String moneda = 'moneda';
+  static const String modoApp               = 'modo_app';
+  static const String tema                  = 'tema';
+  static const String presupuestoMensual    = 'presupuesto_mensual';
+  static const String moneda                = 'moneda';
+  static const String onboardingCompletado  = 'onboarding_completado';
 }
 
 /// Valores posibles para el ajuste `tema`.

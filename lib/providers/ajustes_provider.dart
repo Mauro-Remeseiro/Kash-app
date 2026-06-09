@@ -14,12 +14,14 @@ class AjustesProvider extends ChangeNotifier {
   String _tema = TemaAjuste.system;
   double _presupuestoMensual = 0;
   String _moneda = 'EUR';
+  bool _onboardingCompletado = false;
 
   bool get cargado => _cargado;
   String get modoApp => _modoApp;
   String get tema => _tema;
   double get presupuestoMensual => _presupuestoMensual;
   String get moneda => _moneda;
+  bool get onboardingCompletado => _onboardingCompletado;
 
   bool get esModoEmpresa => _modoApp == ModoApp.empresa;
 
@@ -44,8 +46,17 @@ class AjustesProvider extends ChangeNotifier {
         ) ??
         _presupuestoMensual;
     _moneda = valores[ClaveAjuste.moneda] ?? _moneda;
+    _onboardingCompletado =
+        (valores[ClaveAjuste.onboardingCompletado] ?? '0') == '1';
     _cargado = true;
     notifyListeners();
+  }
+
+  Future<void> completarOnboarding() async {
+    if (_onboardingCompletado) return;
+    _onboardingCompletado = true;
+    notifyListeners();
+    await _db.setAjuste(ClaveAjuste.onboardingCompletado, '1');
   }
 
   Future<void> setModoApp(String modo) async {

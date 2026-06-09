@@ -5,31 +5,33 @@ import '../../models/cuenta.dart';
 import '../../models/movimiento.dart';
 import '../../providers/ajustes_provider.dart';
 import '../../providers/cuentas_provider.dart';
+import '../../providers/empleados_provider.dart';
 import '../../providers/movimientos_provider.dart';
 import '../../theme/kash_colors.dart';
 import '../../utils/constants.dart';
 import '../../widgets/category_grid.dart';
 
-class AddMovimientoScreen extends StatefulWidget {
-  const AddMovimientoScreen({super.key});
+class EmpresaAddScreen extends StatefulWidget {
+  const EmpresaAddScreen({super.key});
 
   @override
-  State<AddMovimientoScreen> createState() => _AddMovimientoScreenState();
+  State<EmpresaAddScreen> createState() => _EmpresaAddScreenState();
 }
 
-class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
+class _EmpresaAddScreenState extends State<EmpresaAddScreen> {
   final _importeController = TextEditingController();
-  final _notaController = TextEditingController();
+  final _conceptoController = TextEditingController();
 
   String _tipo = TipoMovimiento.gasto;
   String? _categoriaId;
   int? _cuentaId;
+  int? _empleadoId;
   bool _guardando = false;
 
   @override
   void dispose() {
     _importeController.dispose();
-    _notaController.dispose();
+    _conceptoController.dispose();
     super.dispose();
   }
 
@@ -50,19 +52,20 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
     final movimientosProvider = context.read<MovimientosProvider>();
     final cuentasProvider = context.read<CuentasProvider>();
 
-    final nota = _notaController.text.trim();
-    await movimientosProvider.agregarMovimiento(
-      Movimiento(
-        tipo: _tipo,
-        importe: importe,
-        nota: nota.isEmpty ? null : nota,
-        categoria: categoriaId,
-        cuentaId: cuentaId,
-        fecha: DateTime.now(),
-        modo: ajustes.modoApp,
-      ),
-      cuentasProvider: cuentasProvider,
+    final concepto = _conceptoController.text.trim();
+    final movimiento = Movimiento(
+      tipo: _tipo,
+      importe: importe,
+      nota: concepto.isEmpty ? null : concepto,
+      categoria: categoriaId,
+      cuentaId: cuentaId,
+      empleadoId: categoriaId == 'empleados' ? _empleadoId : null,
+      fecha: DateTime.now(),
+      modo: ajustes.modoApp,
+      aprobado: true,
     );
+
+    await movimientosProvider.agregarMovimiento(movimiento, cuentasProvider: cuentasProvider);
 
     if (!mounted) return;
     Navigator.of(context).pop();
@@ -74,12 +77,18 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
     final colors = kashColorsOf(context);
     final ajustes = context.watch<AjustesProvider>();
     final cuentas = context.watch<CuentasProvider>().cuentas;
+    final empleadosActivos = context.watch<EmpleadosProvider>().empleadosActivos;
     final categorias = categoriasParaModo(ajustes.modoApp);
 
     _cuentaId ??= context.read<CuentasProvider>().cuentaPrincipal?.id ??
         (cuentas.isNotEmpty ? cuentas.first.id : null);
 
     final esGasto = _tipo == TipoMovimiento.gasto;
+    final mostrarPillsEmpleado = _categoriaId == 'empleados' && empleadosActivos.isNotEmpty;
+
+    if (!mostrarPillsEmpleado) {
+      _empleadoId = null;
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Nuevo movimiento')),
@@ -89,8 +98,9 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
           children: [
             _ToggleTipo(
               esGasto: esGasto,
-              onChanged: (gasto) => setState(
-                  () => _tipo = gasto ? TipoMovimiento.gasto : TipoMovimiento.ingreso),
+              onChanged: (gasto) => setState(() {
+                _tipo = gasto ? TipoMovimiento.gasto : TipoMovimiento.ingreso;
+              }),
             ),
             const SizedBox(height: 24),
             Center(
@@ -101,16 +111,21 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
                 style: theme.textTheme.displayLarge?.copyWith(
                   color: esGasto ? colors.negative : colors.positive,
                 ),
-                decoration: const InputDecoration(border: InputBorder.none, hintText: '0,00'),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: '0,00',
+                ),
                 onChanged: (_) => setState(() {}),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: _notaController,
+              controller: _conceptoController,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
-              decoration: const InputDecoration(hintText: 'Añadir una nota (opcional)'),
+              decoration: const InputDecoration(
+                hintText: 'Concepto (p. ej. Factura proveedor)',
+              ),
             ),
             const SizedBox(height: 28),
             Text('CATEGORÍA', style: theme.textTheme.labelSmall),
@@ -134,6 +149,21 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
                 runSpacing: 8,
                 children: cuentas.map((c) => _buildCuentaPill(theme, colors, c)).toList(),
               ),
+            if (mostrarPillsEmpleado) ...[
+              const SizedBox(height: 28),
+              Text('ASIGNAR A EMPLEADO', style: theme.textTheme.labelSmall),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildEmpleadoPill(theme, colors, null, 'Sin asignar'),
+                  ...empleadosActivos.map(
+                    (empleado) => _buildEmpleadoPill(theme, colors, empleado.id, empleado.nombre),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 36),
             ElevatedButton(
               onPressed: _formularioValido ? _guardar : null,
@@ -169,6 +199,25 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     );
   }
+
+  Widget _buildEmpleadoPill(ThemeData theme, KashColors colors, int? empleadoId, String etiqueta) {
+    final activa = _empleadoId == empleadoId;
+    return ChoiceChip(
+      label: Text(etiqueta),
+      selected: activa,
+      onSelected: (_) => setState(() => _empleadoId = empleadoId),
+      labelStyle: theme.textTheme.bodySmall?.copyWith(
+        color: activa
+            ? (theme.brightness == Brightness.dark ? Colors.black : Colors.white)
+            : null,
+        fontWeight: FontWeight.w500,
+      ),
+      selectedColor: theme.colorScheme.primary,
+      backgroundColor: theme.cardTheme.color,
+      side: BorderSide(color: colors.border),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    );
+  }
 }
 
 class _ToggleTipo extends StatelessWidget {
@@ -191,14 +240,14 @@ class _ToggleTipo extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _opcion(theme, 'Gasto', esGasto, () => onChanged(true))),
-          Expanded(child: _opcion(theme, 'Ingreso', !esGasto, () => onChanged(false))),
+          Expanded(child: _opcion(theme, colors, 'Gasto', esGasto, () => onChanged(true))),
+          Expanded(child: _opcion(theme, colors, 'Ingreso', !esGasto, () => onChanged(false))),
         ],
       ),
     );
   }
 
-  Widget _opcion(ThemeData theme, String texto, bool activa, VoidCallback onTap) {
+  Widget _opcion(ThemeData theme, KashColors colors, String texto, bool activa, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(11),

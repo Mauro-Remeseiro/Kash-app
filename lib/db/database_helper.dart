@@ -7,9 +7,9 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._internal();
 
   static const String _dbName = 'kash.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
 
-  static const String tableCajas = 'cajas';
+  static const String tableCuentas = 'cuentas';
   static const String tableEmpleados = 'empleados';
   static const String tableMovimientos = 'movimientos';
   static const String tableAjustes = 'ajustes';
@@ -26,28 +26,41 @@ class DatabaseHelper {
 
   Future<Database> _open() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, _dbName);
+    final path   = join(dbPath, _dbName);
     return openDatabase(
       path,
       version: _dbVersion,
       onCreate: _onCreate,
-      onConfigure: (db) async {
-        await db.execute('PRAGMA foreign_keys = ON');
-      },
+      onUpgrade: _onUpgrade,
+      onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
     );
   }
 
   Future<void> _onCreate(Database db, int version) async {
+    await _createTablesV2(db);
+    await _seedAjustes(db);
+    await _seedCuentasPersonal(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _migrateV1ToV2(db);
+    }
+  }
+
+  Future<void> _createTablesV2(Database db) async {
     await db.execute('''
-      CREATE TABLE $tableCajas (
-        id        INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre    TEXT NOT NULL,
-        tipo      TEXT NOT NULL,
-        saldo     REAL NOT NULL DEFAULT 0,
-        modo      TEXT NOT NULL,
-        icono     TEXT,
-        color     TEXT,
-        creado_en TEXT NOT NULL
+      CREATE TABLE $tableCuentas (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre            TEXT NOT NULL,
+        icono             TEXT NOT NULL DEFAULT '💵',
+        saldo             REAL NOT NULL DEFAULT 0,
+        incluir_en_total  INTEGER NOT NULL DEFAULT 1,
+        es_principal      INTEGER NOT NULL DEFAULT 0,
+        modo              TEXT NOT NULL DEFAULT 'personal',
+        color             TEXT,
+        actualizado_en    TEXT NOT NULL,
+        creado_en         TEXT NOT NULL
       )
     ''');
 
@@ -67,12 +80,12 @@ class DatabaseHelper {
         importe      REAL NOT NULL,
         nota         TEXT,
         categoria    TEXT NOT NULL,
-        caja_id      INTEGER NOT NULL,
+        cuenta_id    INTEGER NOT NULL,
         empleado_id  INTEGER,
         fecha        TEXT NOT NULL,
         modo         TEXT NOT NULL,
         aprobado     INTEGER DEFAULT 1,
-        FOREIGN KEY (caja_id) REFERENCES $tableCajas (id) ON DELETE CASCADE,
+        FOREIGN KEY (cuenta_id) REFERENCES $tableCuentas (id) ON DELETE CASCADE,
         FOREIGN KEY (empleado_id) REFERENCES $tableEmpleados (id) ON DELETE SET NULL
       )
     ''');
@@ -83,18 +96,97 @@ class DatabaseHelper {
         valor TEXT NOT NULL
       )
     ''');
+  }
 
-    await _seedAjustes(db);
+  Future<void> _migrateV1ToV2(Database db) async {
+    // Disable FK constraints during migration
+    await db.execute('PRAGMA foreign_keys = OFF');
+
+    // Create cuentas table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableCuentas (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre            TEXT NOT NULL,
+        icono             TEXT NOT NULL DEFAULT '💵',
+        saldo             REAL NOT NULL DEFAULT 0,
+        incluir_en_total  INTEGER NOT NULL DEFAULT 1,
+        es_principal      INTEGER NOT NULL DEFAULT 0,
+        modo              TEXT NOT NULL DEFAULT 'personal',
+        color             TEXT,
+        actualizado_en    TEXT NOT NULL,
+        creado_en         TEXT NOT NULL
+      )
+    ''');
+
+    // Migrate existing cajas → cuentas preserving ids
+    final cajas = await db.query('cajas');
+    if (cajas.isEmpty) {
+      await _seedCuentasPersonal(db);
+    } else {
+      var firstId = true;
+      for (final caja in cajas) {
+        final now = caja['creado_en'] as String? ?? DateTime.now().toIso8601String();
+        await db.insert(tableCuentas, {
+          'id': caja['id'],
+          'nombre': caja['nombre'],
+          'icono': caja['icono'] ?? '💵',
+          'saldo': caja['saldo'],
+          'incluir_en_total': 1,
+          'es_principal': firstId ? 1 : 0,
+          'modo': caja['modo'],
+          'color': caja['color'],
+          'actualizado_en': now,
+          'creado_en': now,
+        });
+        firstId = false;
+      }
+    }
+
+    // Rebuild movimientos with cuenta_id instead of caja_id
+    await db.execute('''
+      CREATE TABLE movimientos_v2 (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        tipo         TEXT NOT NULL,
+        importe      REAL NOT NULL,
+        nota         TEXT,
+        categoria    TEXT NOT NULL,
+        cuenta_id    INTEGER NOT NULL,
+        empleado_id  INTEGER,
+        fecha        TEXT NOT NULL,
+        modo         TEXT NOT NULL,
+        aprobado     INTEGER DEFAULT 1
+      )
+    ''');
+
+    await db.execute('''
+      INSERT INTO movimientos_v2 (id, tipo, importe, nota, categoria, cuenta_id, empleado_id, fecha, modo, aprobado)
+      SELECT id, tipo, importe, nota, categoria, caja_id, empleado_id, fecha, modo, aprobado FROM movimientos
+    ''');
+
+    await db.execute('DROP TABLE movimientos');
+    await db.execute('ALTER TABLE movimientos_v2 RENAME TO movimientos');
+    await db.execute('DROP TABLE IF EXISTS cajas');
+
+    // Re-enable FK constraints
+    await db.execute('PRAGMA foreign_keys = ON');
+
+    // Seed new ajuste keys
+    await db.insert(tableAjustes, {'clave': 'onboarding_completado', 'valor': '1'},
+        conflictAlgorithm: ConflictAlgorithm.ignore);
+    await db.insert(tableAjustes, {'clave': 'kash_ai_habilitada', 'valor': '1'},
+        conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   Future<void> _seedAjustes(Database db) async {
-    const valoresIniciales = {
+    const valores = {
       'modo_app': 'personal',
       'tema': 'system',
       'presupuesto_mensual': '0',
       'moneda': 'EUR',
+      'onboarding_completado': '0',
+      'kash_ai_habilitada': '1',
     };
-    for (final entry in valoresIniciales.entries) {
+    for (final entry in valores.entries) {
       await db.insert(
         tableAjustes,
         {'clave': entry.key, 'valor': entry.value},
@@ -103,57 +195,86 @@ class DatabaseHelper {
     }
   }
 
-  // ---------------------------------------------------------------------
-  // Cajas
-  // ---------------------------------------------------------------------
-
-  Future<int> insertCaja(Map<String, Object?> caja) async {
-    final db = await database;
-    return db.insert(tableCajas, caja);
+  Future<void> _seedCuentasPersonal(Database db) async {
+    final now = DateTime.now().toIso8601String();
+    final cuentas = [
+      {'nombre': 'Efectivo', 'icono': '💵', 'saldo': 0.0, 'incluir_en_total': 1, 'es_principal': 1, 'modo': 'personal', 'color': null, 'actualizado_en': now, 'creado_en': now},
+      {'nombre': 'Banco', 'icono': '🏦', 'saldo': 0.0, 'incluir_en_total': 1, 'es_principal': 0, 'modo': 'personal', 'color': null, 'actualizado_en': now, 'creado_en': now},
+      {'nombre': 'Ahorros', 'icono': '💴', 'saldo': 0.0, 'incluir_en_total': 1, 'es_principal': 0, 'modo': 'personal', 'color': null, 'actualizado_en': now, 'creado_en': now},
+    ];
+    for (final c in cuentas) {
+      await db.insert(tableCuentas, c);
+    }
   }
 
-  Future<List<Map<String, Object?>>> getCajas(String modo) async {
-    final db = await database;
-    return db.query(
-      tableCajas,
-      where: 'modo = ?',
-      whereArgs: [modo],
-      orderBy: 'id ASC',
-    );
+  Future<void> _seedCuentasEmpresa(Database db) async {
+    final now = DateTime.now().toIso8601String();
+    final cuentas = [
+      {'nombre': 'Caja chica', 'icono': '💵', 'saldo': 0.0, 'incluir_en_total': 1, 'es_principal': 1, 'modo': 'empresa', 'color': null, 'actualizado_en': now, 'creado_en': now},
+      {'nombre': 'Cuenta operaciones', 'icono': '🏦', 'saldo': 0.0, 'incluir_en_total': 1, 'es_principal': 0, 'modo': 'empresa', 'color': null, 'actualizado_en': now, 'creado_en': now},
+      {'nombre': 'Cuenta nóminas', 'icono': '💳', 'saldo': 0.0, 'incluir_en_total': 1, 'es_principal': 0, 'modo': 'empresa', 'color': null, 'actualizado_en': now, 'creado_en': now},
+    ];
+    for (final c in cuentas) {
+      await db.insert(tableCuentas, c);
+    }
   }
 
-  Future<Map<String, Object?>?> getCaja(int id) async {
+  // -------------------------------------------------------------------------
+  // Cuentas
+  // -------------------------------------------------------------------------
+
+  Future<int> insertCuenta(Map<String, Object?> cuenta) async {
     final db = await database;
-    final result = await db.query(
-      tableCajas,
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
+    return db.insert(tableCuentas, cuenta);
+  }
+
+  Future<List<Map<String, Object?>>> getCuentas(String modo) async {
+    final db = await database;
+    return db.query(tableCuentas, where: 'modo = ?', whereArgs: [modo], orderBy: 'id ASC');
+  }
+
+  Future<Map<String, Object?>?> getCuenta(int id) async {
+    final db = await database;
+    final result = await db.query(tableCuentas, where: 'id = ?', whereArgs: [id], limit: 1);
     return result.isEmpty ? null : result.first;
   }
 
-  Future<int> updateCaja(int id, Map<String, Object?> caja) async {
+  Future<int> updateCuenta(int id, Map<String, Object?> cuenta) async {
     final db = await database;
-    return db.update(tableCajas, caja, where: 'id = ?', whereArgs: [id]);
+    return db.update(tableCuentas, cuenta, where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<int> ajustarSaldoCaja(int id, double delta) async {
+  Future<int> ajustarSaldoCuenta(int id, double delta) async {
     final db = await database;
     return db.rawUpdate(
-      'UPDATE $tableCajas SET saldo = saldo + ? WHERE id = ?',
-      [delta, id],
+      'UPDATE $tableCuentas SET saldo = saldo + ?, actualizado_en = ? WHERE id = ?',
+      [delta, DateTime.now().toIso8601String(), id],
     );
   }
 
-  Future<int> deleteCaja(int id) async {
+  Future<int> deleteCuenta(int id) async {
     final db = await database;
-    return db.delete(tableCajas, where: 'id = ?', whereArgs: [id]);
+    return db.delete(tableCuentas, where: 'id = ?', whereArgs: [id]);
   }
 
-  // ---------------------------------------------------------------------
+  Future<bool> hayCuentasParaModo(String modo) async {
+    final db = await database;
+    final result = await db.query(tableCuentas,
+        where: 'modo = ?', whereArgs: [modo], limit: 1);
+    return result.isNotEmpty;
+  }
+
+  Future<void> seedCuentasEmpresaIfEmpty(String modo) async {
+    final db = await database;
+    final hay = await hayCuentasParaModo(modo);
+    if (!hay && modo == 'empresa') {
+      await _seedCuentasEmpresa(db);
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // Empleados
-  // ---------------------------------------------------------------------
+  // -------------------------------------------------------------------------
 
   Future<int> insertEmpleado(Map<String, Object?> empleado) async {
     final db = await database;
@@ -163,24 +284,14 @@ class DatabaseHelper {
   Future<List<Map<String, Object?>>> getEmpleados({bool soloActivos = false}) async {
     final db = await database;
     if (soloActivos) {
-      return db.query(
-        tableEmpleados,
-        where: 'activo = ?',
-        whereArgs: [1],
-        orderBy: 'nombre ASC',
-      );
+      return db.query(tableEmpleados, where: 'activo = ?', whereArgs: [1], orderBy: 'nombre ASC');
     }
     return db.query(tableEmpleados, orderBy: 'nombre ASC');
   }
 
   Future<Map<String, Object?>?> getEmpleado(int id) async {
     final db = await database;
-    final result = await db.query(
-      tableEmpleados,
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
+    final result = await db.query(tableEmpleados, where: 'id = ?', whereArgs: [id], limit: 1);
     return result.isEmpty ? null : result.first;
   }
 
@@ -194,9 +305,9 @@ class DatabaseHelper {
     return db.delete(tableEmpleados, where: 'id = ?', whereArgs: [id]);
   }
 
-  // ---------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // Movimientos
-  // ---------------------------------------------------------------------
+  // -------------------------------------------------------------------------
 
   Future<int> insertMovimiento(Map<String, Object?> movimiento) async {
     final db = await database;
@@ -207,7 +318,7 @@ class DatabaseHelper {
     required String modo,
     DateTime? desde,
     DateTime? hasta,
-    int? cajaId,
+    int? cuentaId,
     int? empleadoId,
     String? categoria,
     int? limite,
@@ -216,26 +327,11 @@ class DatabaseHelper {
     final where = <String>['modo = ?'];
     final whereArgs = <Object?>[modo];
 
-    if (desde != null) {
-      where.add('fecha >= ?');
-      whereArgs.add(desde.toIso8601String());
-    }
-    if (hasta != null) {
-      where.add('fecha <= ?');
-      whereArgs.add(hasta.toIso8601String());
-    }
-    if (cajaId != null) {
-      where.add('caja_id = ?');
-      whereArgs.add(cajaId);
-    }
-    if (empleadoId != null) {
-      where.add('empleado_id = ?');
-      whereArgs.add(empleadoId);
-    }
-    if (categoria != null) {
-      where.add('categoria = ?');
-      whereArgs.add(categoria);
-    }
+    if (desde != null) { where.add('fecha >= ?'); whereArgs.add(desde.toIso8601String()); }
+    if (hasta != null) { where.add('fecha <= ?'); whereArgs.add(hasta.toIso8601String()); }
+    if (cuentaId != null) { where.add('cuenta_id = ?'); whereArgs.add(cuentaId); }
+    if (empleadoId != null) { where.add('empleado_id = ?'); whereArgs.add(empleadoId); }
+    if (categoria != null) { where.add('categoria = ?'); whereArgs.add(categoria); }
 
     return db.query(
       tableMovimientos,
@@ -248,12 +344,7 @@ class DatabaseHelper {
 
   Future<Map<String, Object?>?> getMovimiento(int id) async {
     final db = await database;
-    final result = await db.query(
-      tableMovimientos,
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
+    final result = await db.query(tableMovimientos, where: 'id = ?', whereArgs: [id], limit: 1);
     return result.isEmpty ? null : result.first;
   }
 
@@ -267,7 +358,6 @@ class DatabaseHelper {
     return db.delete(tableMovimientos, where: 'id = ?', whereArgs: [id]);
   }
 
-  /// Suma de importes para un tipo ('gasto' | 'ingreso') en un rango de fechas.
   Future<double> sumaPorTipo({
     required String modo,
     required String tipo,
@@ -287,7 +377,6 @@ class DatabaseHelper {
     return (value as num).toDouble();
   }
 
-  /// Total gastado por categoría en un rango de fechas (para estadísticas).
   Future<List<Map<String, Object?>>> totalesPorCategoria({
     required String modo,
     required String tipo,
@@ -307,18 +396,13 @@ class DatabaseHelper {
     );
   }
 
-  // ---------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // Ajustes
-  // ---------------------------------------------------------------------
+  // -------------------------------------------------------------------------
 
   Future<String?> getAjuste(String clave) async {
     final db = await database;
-    final result = await db.query(
-      tableAjustes,
-      where: 'clave = ?',
-      whereArgs: [clave],
-      limit: 1,
-    );
+    final result = await db.query(tableAjustes, where: 'clave = ?', whereArgs: [clave], limit: 1);
     if (result.isEmpty) return null;
     return result.first['valor'] as String?;
   }
