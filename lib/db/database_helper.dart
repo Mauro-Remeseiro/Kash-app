@@ -7,12 +7,14 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._internal();
 
   static const String _dbName = 'kash.db';
-  static const int _dbVersion = 2;
+  static const int _dbVersion = 4;
 
   static const String tableCuentas = 'cuentas';
   static const String tableEmpleados = 'empleados';
   static const String tableMovimientos = 'movimientos';
   static const String tableAjustes = 'ajustes';
+  static const String tableCategorias = 'categorias';
+  static const String tableConceptosEmpleado = 'conceptos_empleado';
 
   Database? _database;
 
@@ -37,18 +39,26 @@ class DatabaseHelper {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    await _createTablesV2(db);
+    await _createTablesV3(db);
+    await _createConceptosEmpleadoTable(db);
     await _seedAjustes(db);
     await _seedCuentasPersonal(db);
+    await _seedCategoriasBase(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _migrateV1ToV2(db);
     }
+    if (oldVersion < 3) {
+      await _migrateV2ToV3(db);
+    }
+    if (oldVersion < 4) {
+      await _migrateV3ToV4(db);
+    }
   }
 
-  Future<void> _createTablesV2(Database db) async {
+  Future<void> _createTablesV3(Database db) async {
     await db.execute('''
       CREATE TABLE $tableCuentas (
         id                INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,17 +84,30 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
+      CREATE TABLE $tableCategorias (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre     TEXT NOT NULL,
+        emoji      TEXT NOT NULL,
+        tipo       TEXT NOT NULL DEFAULT 'ambos',
+        modo       TEXT NOT NULL DEFAULT 'personal',
+        es_custom  INTEGER NOT NULL DEFAULT 0,
+        orden      INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
+    await db.execute('''
       CREATE TABLE $tableMovimientos (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
         tipo         TEXT NOT NULL,
         importe      REAL NOT NULL,
         nota         TEXT,
-        categoria    TEXT NOT NULL,
+        categoria_id INTEGER,
         cuenta_id    INTEGER NOT NULL,
         empleado_id  INTEGER,
         fecha        TEXT NOT NULL,
         modo         TEXT NOT NULL,
         aprobado     INTEGER DEFAULT 1,
+        FOREIGN KEY (categoria_id) REFERENCES $tableCategorias (id) ON DELETE SET NULL,
         FOREIGN KEY (cuenta_id) REFERENCES $tableCuentas (id) ON DELETE CASCADE,
         FOREIGN KEY (empleado_id) REFERENCES $tableEmpleados (id) ON DELETE SET NULL
       )
@@ -94,6 +117,21 @@ class DatabaseHelper {
       CREATE TABLE $tableAjustes (
         clave TEXT PRIMARY KEY,
         valor TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future<void> _createConceptosEmpleadoTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableConceptosEmpleado (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        empleado_id  INTEGER NOT NULL,
+        tipo         TEXT,
+        descripcion  TEXT,
+        importe      REAL NOT NULL,
+        fecha        TEXT NOT NULL,
+        aprobado     INTEGER NOT NULL DEFAULT 1,
+        FOREIGN KEY (empleado_id) REFERENCES $tableEmpleados (id) ON DELETE CASCADE
       )
     ''');
   }
@@ -175,6 +213,119 @@ class DatabaseHelper {
         conflictAlgorithm: ConflictAlgorithm.ignore);
     await db.insert(tableAjustes, {'clave': 'kash_ai_habilitada', 'valor': '1'},
         conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<void> _migrateV2ToV3(Database db) async {
+    // Disable FK constraints during migration
+    await db.execute('PRAGMA foreign_keys = OFF');
+
+    // Create categorias table and seed default categories
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableCategorias (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre     TEXT NOT NULL,
+        emoji      TEXT NOT NULL,
+        tipo       TEXT NOT NULL DEFAULT 'ambos',
+        modo       TEXT NOT NULL DEFAULT 'personal',
+        es_custom  INTEGER NOT NULL DEFAULT 0,
+        orden      INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+    await _seedCategoriasBase(db);
+
+    // Map legacy string ids (movimientos.categoria) to new integer ids
+    final filasCategorias = await db.query(tableCategorias);
+    final idsPorNombre = {
+      for (final fila in filasCategorias)
+        (fila['nombre'] as String).toLowerCase(): fila['id'] as int,
+    };
+    final idOtro = idsPorNombre['otro'];
+
+    // Rebuild movimientos with categoria_id instead of categoria
+    await db.execute('''
+      CREATE TABLE movimientos_v3 (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        tipo         TEXT NOT NULL,
+        importe      REAL NOT NULL,
+        nota         TEXT,
+        categoria_id INTEGER,
+        cuenta_id    INTEGER NOT NULL,
+        empleado_id  INTEGER,
+        fecha        TEXT NOT NULL,
+        modo         TEXT NOT NULL,
+        aprobado     INTEGER DEFAULT 1,
+        FOREIGN KEY (categoria_id) REFERENCES $tableCategorias (id) ON DELETE SET NULL,
+        FOREIGN KEY (cuenta_id) REFERENCES $tableCuentas (id) ON DELETE CASCADE,
+        FOREIGN KEY (empleado_id) REFERENCES $tableEmpleados (id) ON DELETE SET NULL
+      )
+    ''');
+
+    final movimientos = await db.query('movimientos');
+    for (final m in movimientos) {
+      final categoriaStr = (m['categoria'] as String?)?.toLowerCase();
+      final categoriaId = idsPorNombre[categoriaStr] ?? idOtro;
+      await db.insert('movimientos_v3', {
+        'id': m['id'],
+        'tipo': m['tipo'],
+        'importe': m['importe'],
+        'nota': m['nota'],
+        'categoria_id': categoriaId,
+        'cuenta_id': m['cuenta_id'],
+        'empleado_id': m['empleado_id'],
+        'fecha': m['fecha'],
+        'modo': m['modo'],
+        'aprobado': m['aprobado'],
+      });
+    }
+
+    await db.execute('DROP TABLE movimientos');
+    await db.execute('ALTER TABLE movimientos_v3 RENAME TO movimientos');
+
+    // Re-enable FK constraints
+    await db.execute('PRAGMA foreign_keys = ON');
+  }
+
+  Future<void> _migrateV3ToV4(Database db) async {
+    await _createConceptosEmpleadoTable(db);
+  }
+
+  Future<void> _seedCategoriasBase(Database db) async {
+    const personal = [
+      {'nombre': 'Comida', 'emoji': '🍔'},
+      {'nombre': 'Transporte', 'emoji': '🚌'},
+      {'nombre': 'Ocio', 'emoji': '🎬'},
+      {'nombre': 'Casa', 'emoji': '🏠'},
+      {'nombre': 'Salud', 'emoji': '💊'},
+      {'nombre': 'Otro', 'emoji': '❓'},
+    ];
+    const empresa = [
+      {'nombre': 'Clientes', 'emoji': '💼'},
+      {'nombre': 'Oficina', 'emoji': '🏢'},
+      {'nombre': 'Empleados', 'emoji': '🤝'},
+      {'nombre': 'Suministros', 'emoji': '🔧'},
+    ];
+
+    var orden = 0;
+    for (final c in personal) {
+      await db.insert(tableCategorias, {
+        'nombre': c['nombre'],
+        'emoji': c['emoji'],
+        'tipo': 'ambos',
+        'modo': 'personal',
+        'es_custom': 0,
+        'orden': orden++,
+      });
+    }
+    for (final c in empresa) {
+      await db.insert(tableCategorias, {
+        'nombre': c['nombre'],
+        'emoji': c['emoji'],
+        'tipo': 'ambos',
+        'modo': 'empresa',
+        'es_custom': 0,
+        'orden': orden++,
+      });
+    }
   }
 
   Future<void> _seedAjustes(Database db) async {
@@ -320,7 +471,7 @@ class DatabaseHelper {
     DateTime? hasta,
     int? cuentaId,
     int? empleadoId,
-    String? categoria,
+    int? categoriaId,
     int? limite,
   }) async {
     final db = await database;
@@ -331,7 +482,7 @@ class DatabaseHelper {
     if (hasta != null) { where.add('fecha <= ?'); whereArgs.add(hasta.toIso8601String()); }
     if (cuentaId != null) { where.add('cuenta_id = ?'); whereArgs.add(cuentaId); }
     if (empleadoId != null) { where.add('empleado_id = ?'); whereArgs.add(empleadoId); }
-    if (categoria != null) { where.add('categoria = ?'); whereArgs.add(categoria); }
+    if (categoriaId != null) { where.add('categoria_id = ?'); whereArgs.add(categoriaId); }
 
     return db.query(
       tableMovimientos,
@@ -386,13 +537,69 @@ class DatabaseHelper {
     final db = await database;
     return db.rawQuery(
       '''
-      SELECT categoria, COALESCE(SUM(importe), 0) AS total
+      SELECT categoria_id, COALESCE(SUM(importe), 0) AS total
       FROM $tableMovimientos
       WHERE modo = ? AND tipo = ? AND fecha >= ? AND fecha <= ?
-      GROUP BY categoria
+      GROUP BY categoria_id
       ORDER BY total DESC
       ''',
       [modo, tipo, desde.toIso8601String(), hasta.toIso8601String()],
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Categorías
+  // -------------------------------------------------------------------------
+
+  Future<int> insertCategoria(Map<String, Object?> categoria) async {
+    final db = await database;
+    return db.insert(tableCategorias, categoria);
+  }
+
+  Future<List<Map<String, Object?>>> getCategorias(String modo) async {
+    final db = await database;
+    if (modo == 'empresa') {
+      return db.query(
+        tableCategorias,
+        where: 'modo IN (?, ?)',
+        whereArgs: ['personal', 'empresa'],
+        orderBy: 'orden ASC, id ASC',
+      );
+    }
+    return db.query(
+      tableCategorias,
+      where: 'modo = ?',
+      whereArgs: ['personal'],
+      orderBy: 'orden ASC, id ASC',
+    );
+  }
+
+  Future<int> updateCategoria(int id, Map<String, Object?> categoria) async {
+    final db = await database;
+    return db.update(tableCategorias, categoria, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<int> deleteCategoria(int id) async {
+    final db = await database;
+    return db.delete(tableCategorias, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<int> contarMovimientosPorCategoria(int categoriaId) async {
+    final db = await database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) AS total FROM $tableMovimientos WHERE categoria_id = ?',
+      [categoriaId],
+    );
+    return (result.first['total'] as int?) ?? 0;
+  }
+
+  Future<int> reasignarMovimientos(int categoriaIdOrigen, int? categoriaIdDestino) async {
+    final db = await database;
+    return db.update(
+      tableMovimientos,
+      {'categoria_id': categoriaIdDestino},
+      where: 'categoria_id = ?',
+      whereArgs: [categoriaIdOrigen],
     );
   }
 
@@ -421,6 +628,45 @@ class DatabaseHelper {
       tableAjustes,
       {'clave': clave, 'valor': valor},
       conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Conceptos de empleado
+  // -------------------------------------------------------------------------
+
+  Future<int> insertConceptoEmpleado(Map<String, Object?> concepto) async {
+    final db = await database;
+    return db.insert(tableConceptosEmpleado, concepto);
+  }
+
+  Future<List<Map<String, Object?>>> getConceptosEmpleado(int empleadoId) async {
+    final db = await database;
+    return db.query(
+      tableConceptosEmpleado,
+      where: 'empleado_id = ?',
+      whereArgs: [empleadoId],
+      orderBy: 'fecha DESC, id DESC',
+    );
+  }
+
+  Future<int> updateConceptoEmpleado(int id, Map<String, Object?> concepto) async {
+    final db = await database;
+    return db.update(tableConceptosEmpleado, concepto, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<int> deleteConceptoEmpleado(int id) async {
+    final db = await database;
+    return db.delete(tableConceptosEmpleado, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> aprobarTodosConceptosEmpleado(int empleadoId) async {
+    final db = await database;
+    await db.update(
+      tableConceptosEmpleado,
+      {'aprobado': 1},
+      where: 'empleado_id = ?',
+      whereArgs: [empleadoId],
     );
   }
 

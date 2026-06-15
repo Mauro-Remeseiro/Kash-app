@@ -5,8 +5,11 @@ import 'package:provider/provider.dart';
 
 import 'models/caja.dart';
 import 'providers/ajustes_provider.dart';
+import 'providers/categorias_provider.dart';
+import 'providers/conceptos_empleado_provider.dart';
 import 'providers/cuentas_provider.dart';
 import 'providers/empleados_provider.dart';
+import 'providers/kash_ai_provider.dart';
 import 'providers/locale_provider.dart';
 import 'providers/movimientos_provider.dart';
 import 'screens/ajustes/ajustes_screen.dart';
@@ -29,10 +32,13 @@ class KashApp extends StatefulWidget {
 
 class _KashAppState extends State<KashApp> with WidgetsBindingObserver {
   late final AjustesProvider _ajustesProvider;
+  late final CategoriasProvider _categoriasProvider;
   late final CuentasProvider _cuentasProvider;
   late final EmpleadosProvider _empleadosProvider;
   late final MovimientosProvider _movimientosProvider;
+  late final ConceptosEmpleadoProvider _conceptosEmpleadoProvider;
   late final LocaleProvider _localeProvider;
+  late final KashAiProvider _kashAiProvider;
 
   bool _isLocked = true;
 
@@ -41,10 +47,13 @@ class _KashAppState extends State<KashApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _ajustesProvider = AjustesProvider();
+    _categoriasProvider = CategoriasProvider();
     _cuentasProvider = CuentasProvider();
     _empleadosProvider = EmpleadosProvider();
     _movimientosProvider = MovimientosProvider();
+    _conceptosEmpleadoProvider = ConceptosEmpleadoProvider();
     _localeProvider = LocaleProvider();
+    _kashAiProvider = KashAiProvider();
     _cargarDatosIniciales();
   }
 
@@ -66,6 +75,8 @@ class _KashAppState extends State<KashApp> with WidgetsBindingObserver {
     final authEnabled = await AuthService.isEnabled;
     if (!authEnabled && mounted) setState(() => _isLocked = false);
 
+    AuthService.applySecureScreen();
+
     await Future.wait([
       _localeProvider.init(),
       _ajustesProvider.cargar(),
@@ -73,6 +84,7 @@ class _KashAppState extends State<KashApp> with WidgetsBindingObserver {
 
     final modo = _ajustesProvider.modoApp;
     await Future.wait([
+      _categoriasProvider.cargar(modo),
       _cuentasProvider.cargar(modo),
       _empleadosProvider.cargar(),
       _movimientosProvider.cargar(modo: modo),
@@ -84,10 +96,13 @@ class _KashAppState extends State<KashApp> with WidgetsBindingObserver {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: _ajustesProvider),
+        ChangeNotifierProvider.value(value: _categoriasProvider),
         ChangeNotifierProvider.value(value: _cuentasProvider),
         ChangeNotifierProvider.value(value: _empleadosProvider),
         ChangeNotifierProvider.value(value: _movimientosProvider),
+        ChangeNotifierProvider.value(value: _conceptosEmpleadoProvider),
         ChangeNotifierProvider.value(value: _localeProvider),
+        ChangeNotifierProvider.value(value: _kashAiProvider),
       ],
       child: Consumer2<AjustesProvider, LocaleProvider>(
         builder: (context, ajustes, locale, _) {
@@ -168,6 +183,7 @@ class _KashShellState extends State<_KashShell> {
   @override
   Widget build(BuildContext context) {
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: IndexedStack(index: _tabIndex, children: _screens),
@@ -178,26 +194,26 @@ class _KashShellState extends State<_KashShell> {
         child: BottomNavigationBar(
           currentIndex: _tabIndex,
           onTap: (i) => setState(() => _tabIndex = i),
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Inicio',
+              icon: const Icon(Icons.home_outlined),
+              activeIcon: const Icon(Icons.home),
+              label: l10n.inicio,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart_outlined),
-              activeIcon: Icon(Icons.bar_chart),
-              label: 'Stats',
+              icon: const Icon(Icons.bar_chart_outlined),
+              activeIcon: const Icon(Icons.bar_chart),
+              label: l10n.estadisticas,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet_outlined),
-              activeIcon: Icon(Icons.account_balance_wallet),
-              label: 'Cuentas',
+              icon: const Icon(Icons.account_balance_wallet_outlined),
+              activeIcon: const Icon(Icons.account_balance_wallet),
+              label: l10n.cuentas,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              activeIcon: Icon(Icons.settings),
-              label: 'Ajustes',
+              icon: const Icon(Icons.settings_outlined),
+              activeIcon: const Icon(Icons.settings),
+              label: l10n.ajustes,
             ),
           ],
         ),

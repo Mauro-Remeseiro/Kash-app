@@ -33,8 +33,10 @@
   "idioma": "Idioma",
   "pais": "País",
   "moneda": "Moneda",
+  "paisYMoneda": "País y moneda",
   "inicio": "Inicio",
   "estadisticas": "Stats",
+  "estadisticasTitle": "Estadísticas",
   "cuentas": "Cuentas",
   "categorias": "Categorías",
   "empleados": "Empleados",
@@ -52,11 +54,19 @@
   "pinIncorrecto": "PIN incorrecto",
   "intentosRestantes": "{n} intentos restantes",
   "@intentosRestantes": {
-    "placeholders": { "n": { "type": "int" } }
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   },
   "bloqueadoSegundos": "Bloqueado {s}s",
   "@bloqueadoSegundos": {
-    "placeholders": { "s": { "type": "int" } }
+    "placeholders": {
+      "s": {
+        "type": "int"
+      }
+    }
   },
   "tusFinanzas": "Tus finanzas, protegidas",
   "modoPodrasCambiar": "Puedes cambiarlo después en Ajustes",
@@ -78,5 +88,188 @@
   "nuevoPin": "Nuevo PIN",
   "confirmarPin": "Confirmar PIN",
   "pinesNoCoinciden": "Los PINs no coinciden",
-  "bloqueado": "Bloqueado"
+  "crear": "Crear",
+  "pinGuardadoCheck": "✓ PIN guardado",
+  "bloqueado": "Bloqueado",
+  "filtroSemana": "Semana",
+  "filtroMes": "Mes",
+  "filtroTodo": "Todo",
+  "gastadoDeTotal": "{gastado} de {total}",
+  "@gastadoDeTotal": {
+    "placeholders": {
+      "gastado": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "sinPresupuestoDefinido": "Sin presupuesto definido",
+  "confirmarEliminarMovimiento": "¿Eliminar este movimiento? Esta acción no se puede deshacer.",
+  "movimientoEliminado": "Movimiento eliminado",
+  "sinMovimientosPeriodo": "Sin movimientos en este periodo",
+  "sistemaTema": "Sistema",
+  "claroTema": "Claro",
+  "oscuroTema": "Oscuro",
+  "categoriasLabel": "CATEGORÍAS",
+  "misCategorias": "Mis categorías",
+  "kashAiLabel": "KASH AI",
+  "huellaOFaceId": "Huella o Face ID al entrar",
+  "claveApiAnthropic": "Clave de API de Anthropic",
+  "kashAiActivo": "Kash AI está activado. {n} consultas restantes este mes.",
+  "@kashAiActivo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "kashAiInactivo": "Introduce tu clave para activar el asistente Kash AI.",
+  "skAntHint": "sk-ant-...",
+  "apiKeyGuardada": "Clave de API guardada",
+  "apiKeyEliminada": "Clave de API eliminada",
+  "entendido": "Entendido",
+  "hintImporte": "0,00",
+  "sinCategoriasAun": "Todavía no tienes categorías.",
+  "eliminarCategoriaTitle": "Eliminar categoría",
+  "eliminarCategoriaConfirm": "¿Seguro que quieres eliminar \"{nombre}\"?",
+  "@eliminarCategoriaConfirm": {
+    "placeholders": {
+      "nombre": {
+        "type": "String"
+      }
+    }
+  },
+  "categoriaPersonalizada": "Personalizada",
+  "sinMovimientosCategoria": "Sin movimientos",
+  "unMovimiento": "1 movimiento",
+  "nMovimientos": "{n} movimientos",
+  "@nMovimientos": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "moverMovimientosTitle": "Mover movimientos a...",
+  "reasignarMovimientosMsg": "\"{nombre}\" tiene movimientos asociados. Elige a qué categoría quieres moverlos antes de eliminarla.",
+  "@reasignarMovimientosMsg": {
+    "placeholders": {
+      "nombre": {
+        "type": "String"
+      }
+    }
+  },
+  "totalEsteMes": "TOTAL ESTE MES",
+  "eliminarConceptoTitle": "Eliminar concepto",
+  "eliminarConceptoConfirm": "¿Seguro que quieres eliminar este concepto?",
+  "tipoSueldo": "Sueldo",
+  "tipoComision": "Comisión",
+  "tipoBonus": "Bonus",
+  "tipoDieta": "Dieta",
+  "tipoOtro": "Otro",
+  "concepto": "Concepto",
+  "conceptosLabel": "CONCEPTOS",
+  "sinConceptosAun": "Todavía no hay conceptos para este empleado.",
+  "pendiente": "Pendiente",
+  "aprobarTodos": "Aprobar todos",
+  "pendienteDeAprobar": "PENDIENTE DE APROBAR",
+  "tuEquipo": "TU EQUIPO",
+  "sinEmpleadosAun": "Todavía no has añadido ningún empleado.",
+  "exportarInforme": "Exportar informe",
+  "proTag": "PRO",
+  "exportarInformeProTitle": "Exportar informe — Kash Pro",
+  "exportarInformeProMsg": "Exportar el informe de empleados en PDF es una función de Kash Pro (pago único, 2,99 €). Desbloquéala junto con el histórico de meses anteriores y los presupuestos personalizados.",
+  "aprobado": "Aprobado",
+  "nuevoMovimiento": "Nuevo movimiento",
+  "categoriaLabel": "CATEGORÍA",
+  "cuentaLabel": "CUENTA",
+  "crearCuentaPrimero": "Crea primero una cuenta para poder guardar movimientos.",
+  "asignarAEmpleado": "ASIGNAR A EMPLEADO",
+  "sinAsignar": "Sin asignar",
+  "conceptoHint": "Concepto (p. ej. Factura proveedor)",
+  "gasto": "Gasto",
+  "ingreso": "Ingreso",
+  "movimientoGuardado": "Movimiento guardado",
+  "clienteLabel": "Cliente",
+  "gastoFijoLabel": "Gasto fijo",
+  "empleadoLabel": "Empleado",
+  "kashAiTitleSparkle": "Kash AI ✨",
+  "consultasEsteMes": "{n} consultas este mes",
+  "@consultasEsteMes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "limiteMensualAlcanzado": "Límite mensual alcanzado",
+  "sugerenciaAhorro": "¿Cuánto puedo ahorrar?",
+  "sugerenciaGastoMayor": "¿En qué gasto más?",
+  "sugerenciaQuePasaSi": "¿Qué pasa si gasto 50€ más?",
+  "sugerenciaAnalizaMes": "Analiza mi mes",
+  "kashAiEmptyState": "Pregúntame lo que quieras\nsobre tus finanzas",
+  "preguntaKashAiHint": "Pregunta a Kash AI...",
+  "kashAiSinApiKey": "Configura tu clave de API de Anthropic en Ajustes › Kash AI para empezar a chatear.",
+  "separadorO": "o",
+  "kashProTitle": "Kash Pro",
+  "proximamente": "Próximamente",
+  "featureSyncDevices": "Sincronización entre dispositivos",
+  "featureReportsCSV": "Informes y exportación CSV",
+  "featureUnlimitedEmployees": "Empleados y cajas ilimitadas",
+  "featureCustomThemes": "Temas personalizados",
+  "avisarmeDisponible": "Avisarme cuando esté disponible",
+  "notaOpcionalHint": "Añadir una nota (opcional)",
+  "misCuentas": "Mis cuentas",
+  "tusCuentas": "TUS CUENTAS",
+  "soloCuentasIncluidas": "Solo cuentas incluidas en total",
+  "principal": "Principal",
+  "incluidaEnTotal": "Incluida en total",
+  "noIncluidaEnTotal": "No incluida en total",
+  "icono": "ICONO",
+  "nombre": "NOMBRE",
+  "nombreCuentaHint": "Nombre de la cuenta",
+  "actualizarSaldo": "ACTUALIZAR SALDO",
+  "ok": "OK",
+  "incluirEnPatrimonio": "Incluir en patrimonio total",
+  "marcarComoPrincipal": "Marcar como cuenta principal",
+  "eliminarCuentaTitle": "Eliminar cuenta",
+  "eliminarCuentaConfirm": "¿Seguro que quieres eliminar \"{nombre}\"? También se eliminarán todos sus movimientos.",
+  "@eliminarCuentaConfirm": {
+    "placeholders": {
+      "nombre": {
+        "type": "String"
+      }
+    }
+  },
+  "saldoInicialOpcional": "SALDO INICIAL (OPCIONAL)",
+  "cuentaCorrienteEjemplo": "p. ej. Cuenta corriente",
+  "crearCuentaBtn": "Crear cuenta",
+  "cuentaCreada": "Cuenta creada",
+  "totalDelMes": "TOTAL DEL MES",
+  "gastosPorSemana": "GASTOS POR SEMANA",
+  "desgloseCategorias": "DESGLOSE POR CATEGORÍA",
+  "sinGastosEsteMes": "Todavía no hay gastos este mes.",
+  "valorEsteMes": "{valor} este mes",
+  "@valorEsteMes": {
+    "placeholders": {
+      "valor": {
+        "type": "String"
+      }
+    }
+  },
+  "exportarPdfProTitle": "Exportar PDF — Kash Pro",
+  "exportarPdfProMsg": "Exportar tus estadísticas en PDF es una función de Kash Pro (pago único, 2,99 €). Desbloquéala junto con el histórico de meses anteriores y los presupuestos personalizados.",
+  "editarCategoria": "Editar categoría",
+  "nuevaCategoria": "Nueva categoría",
+  "nombreHint": "Nombre",
+  "emojiLabel": "EMOJI",
+  "editarConcepto": "Editar concepto",
+  "nuevoConcepto": "Nuevo concepto",
+  "tipoLabel": "TIPO",
+  "sinTipo": "Sin tipo",
+  "descripcionConceptoHint": "Descripción (ej. comisión venta cliente Acme)",
+  "guardarConcepto": "Guardar concepto",
+  "eliminarElementoConfirm": "¿Eliminar este elemento? Esta acción no se puede deshacer."
 }

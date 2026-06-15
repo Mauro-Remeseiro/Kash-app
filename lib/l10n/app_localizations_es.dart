@@ -109,10 +109,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get moneda => 'Moneda';
 
   @override
+  String get paisYMoneda => 'País y moneda';
+
+  @override
   String get inicio => 'Inicio';
 
   @override
   String get estadisticas => 'Stats';
+
+  @override
+  String get estadisticasTitle => 'Estadísticas';
 
   @override
   String get cuentas => 'Cuentas';
@@ -231,5 +237,403 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pinesNoCoinciden => 'Los PINs no coinciden';
 
   @override
+  String get crear => 'Crear';
+
+  @override
+  String get pinGuardadoCheck => '✓ PIN guardado';
+
+  @override
   String get bloqueado => 'Bloqueado';
+
+  @override
+  String get filtroSemana => 'Semana';
+
+  @override
+  String get filtroMes => 'Mes';
+
+  @override
+  String get filtroTodo => 'Todo';
+
+  @override
+  String gastadoDeTotal(String gastado, String total) {
+    return '$gastado de $total';
+  }
+
+  @override
+  String get sinPresupuestoDefinido => 'Sin presupuesto definido';
+
+  @override
+  String get confirmarEliminarMovimiento =>
+      '¿Eliminar este movimiento? Esta acción no se puede deshacer.';
+
+  @override
+  String get movimientoEliminado => 'Movimiento eliminado';
+
+  @override
+  String get sinMovimientosPeriodo => 'Sin movimientos en este periodo';
+
+  @override
+  String get sistemaTema => 'Sistema';
+
+  @override
+  String get claroTema => 'Claro';
+
+  @override
+  String get oscuroTema => 'Oscuro';
+
+  @override
+  String get categoriasLabel => 'CATEGORÍAS';
+
+  @override
+  String get misCategorias => 'Mis categorías';
+
+  @override
+  String get kashAiLabel => 'KASH AI';
+
+  @override
+  String get huellaOFaceId => 'Huella o Face ID al entrar';
+
+  @override
+  String get claveApiAnthropic => 'Clave de API de Anthropic';
+
+  @override
+  String kashAiActivo(int n) {
+    return 'Kash AI está activado. $n consultas restantes este mes.';
+  }
+
+  @override
+  String get kashAiInactivo =>
+      'Introduce tu clave para activar el asistente Kash AI.';
+
+  @override
+  String get skAntHint => 'sk-ant-...';
+
+  @override
+  String get apiKeyGuardada => 'Clave de API guardada';
+
+  @override
+  String get apiKeyEliminada => 'Clave de API eliminada';
+
+  @override
+  String get entendido => 'Entendido';
+
+  @override
+  String get hintImporte => '0,00';
+
+  @override
+  String get sinCategoriasAun => 'Todavía no tienes categorías.';
+
+  @override
+  String get eliminarCategoriaTitle => 'Eliminar categoría';
+
+  @override
+  String eliminarCategoriaConfirm(String nombre) {
+    return '¿Seguro que quieres eliminar \"$nombre\"?';
+  }
+
+  @override
+  String get categoriaPersonalizada => 'Personalizada';
+
+  @override
+  String get sinMovimientosCategoria => 'Sin movimientos';
+
+  @override
+  String get unMovimiento => '1 movimiento';
+
+  @override
+  String nMovimientos(int n) {
+    return '$n movimientos';
+  }
+
+  @override
+  String get moverMovimientosTitle => 'Mover movimientos a...';
+
+  @override
+  String reasignarMovimientosMsg(String nombre) {
+    return '\"$nombre\" tiene movimientos asociados. Elige a qué categoría quieres moverlos antes de eliminarla.';
+  }
+
+  @override
+  String get totalEsteMes => 'TOTAL ESTE MES';
+
+  @override
+  String get eliminarConceptoTitle => 'Eliminar concepto';
+
+  @override
+  String get eliminarConceptoConfirm =>
+      '¿Seguro que quieres eliminar este concepto?';
+
+  @override
+  String get tipoSueldo => 'Sueldo';
+
+  @override
+  String get tipoComision => 'Comisión';
+
+  @override
+  String get tipoBonus => 'Bonus';
+
+  @override
+  String get tipoDieta => 'Dieta';
+
+  @override
+  String get tipoOtro => 'Otro';
+
+  @override
+  String get concepto => 'Concepto';
+
+  @override
+  String get conceptosLabel => 'CONCEPTOS';
+
+  @override
+  String get sinConceptosAun => 'Todavía no hay conceptos para este empleado.';
+
+  @override
+  String get pendiente => 'Pendiente';
+
+  @override
+  String get aprobarTodos => 'Aprobar todos';
+
+  @override
+  String get pendienteDeAprobar => 'PENDIENTE DE APROBAR';
+
+  @override
+  String get tuEquipo => 'TU EQUIPO';
+
+  @override
+  String get sinEmpleadosAun => 'Todavía no has añadido ningún empleado.';
+
+  @override
+  String get exportarInforme => 'Exportar informe';
+
+  @override
+  String get proTag => 'PRO';
+
+  @override
+  String get exportarInformeProTitle => 'Exportar informe — Kash Pro';
+
+  @override
+  String get exportarInformeProMsg =>
+      'Exportar el informe de empleados en PDF es una función de Kash Pro (pago único, 2,99 €). Desbloquéala junto con el histórico de meses anteriores y los presupuestos personalizados.';
+
+  @override
+  String get aprobado => 'Aprobado';
+
+  @override
+  String get nuevoMovimiento => 'Nuevo movimiento';
+
+  @override
+  String get categoriaLabel => 'CATEGORÍA';
+
+  @override
+  String get cuentaLabel => 'CUENTA';
+
+  @override
+  String get crearCuentaPrimero =>
+      'Crea primero una cuenta para poder guardar movimientos.';
+
+  @override
+  String get asignarAEmpleado => 'ASIGNAR A EMPLEADO';
+
+  @override
+  String get sinAsignar => 'Sin asignar';
+
+  @override
+  String get conceptoHint => 'Concepto (p. ej. Factura proveedor)';
+
+  @override
+  String get gasto => 'Gasto';
+
+  @override
+  String get ingreso => 'Ingreso';
+
+  @override
+  String get movimientoGuardado => 'Movimiento guardado';
+
+  @override
+  String get clienteLabel => 'Cliente';
+
+  @override
+  String get gastoFijoLabel => 'Gasto fijo';
+
+  @override
+  String get empleadoLabel => 'Empleado';
+
+  @override
+  String get kashAiTitleSparkle => 'Kash AI ✨';
+
+  @override
+  String consultasEsteMes(int n) {
+    return '$n consultas este mes';
+  }
+
+  @override
+  String get limiteMensualAlcanzado => 'Límite mensual alcanzado';
+
+  @override
+  String get sugerenciaAhorro => '¿Cuánto puedo ahorrar?';
+
+  @override
+  String get sugerenciaGastoMayor => '¿En qué gasto más?';
+
+  @override
+  String get sugerenciaQuePasaSi => '¿Qué pasa si gasto 50€ más?';
+
+  @override
+  String get sugerenciaAnalizaMes => 'Analiza mi mes';
+
+  @override
+  String get kashAiEmptyState =>
+      'Pregúntame lo que quieras\nsobre tus finanzas';
+
+  @override
+  String get preguntaKashAiHint => 'Pregunta a Kash AI...';
+
+  @override
+  String get kashAiSinApiKey =>
+      'Configura tu clave de API de Anthropic en Ajustes › Kash AI para empezar a chatear.';
+
+  @override
+  String get separadorO => 'o';
+
+  @override
+  String get kashProTitle => 'Kash Pro';
+
+  @override
+  String get proximamente => 'Próximamente';
+
+  @override
+  String get featureSyncDevices => 'Sincronización entre dispositivos';
+
+  @override
+  String get featureReportsCSV => 'Informes y exportación CSV';
+
+  @override
+  String get featureUnlimitedEmployees => 'Empleados y cajas ilimitadas';
+
+  @override
+  String get featureCustomThemes => 'Temas personalizados';
+
+  @override
+  String get avisarmeDisponible => 'Avisarme cuando esté disponible';
+
+  @override
+  String get notaOpcionalHint => 'Añadir una nota (opcional)';
+
+  @override
+  String get misCuentas => 'Mis cuentas';
+
+  @override
+  String get tusCuentas => 'TUS CUENTAS';
+
+  @override
+  String get soloCuentasIncluidas => 'Solo cuentas incluidas en total';
+
+  @override
+  String get principal => 'Principal';
+
+  @override
+  String get incluidaEnTotal => 'Incluida en total';
+
+  @override
+  String get noIncluidaEnTotal => 'No incluida en total';
+
+  @override
+  String get icono => 'ICONO';
+
+  @override
+  String get nombre => 'NOMBRE';
+
+  @override
+  String get nombreCuentaHint => 'Nombre de la cuenta';
+
+  @override
+  String get actualizarSaldo => 'ACTUALIZAR SALDO';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get incluirEnPatrimonio => 'Incluir en patrimonio total';
+
+  @override
+  String get marcarComoPrincipal => 'Marcar como cuenta principal';
+
+  @override
+  String get eliminarCuentaTitle => 'Eliminar cuenta';
+
+  @override
+  String eliminarCuentaConfirm(String nombre) {
+    return '¿Seguro que quieres eliminar \"$nombre\"? También se eliminarán todos sus movimientos.';
+  }
+
+  @override
+  String get saldoInicialOpcional => 'SALDO INICIAL (OPCIONAL)';
+
+  @override
+  String get cuentaCorrienteEjemplo => 'p. ej. Cuenta corriente';
+
+  @override
+  String get crearCuentaBtn => 'Crear cuenta';
+
+  @override
+  String get cuentaCreada => 'Cuenta creada';
+
+  @override
+  String get totalDelMes => 'TOTAL DEL MES';
+
+  @override
+  String get gastosPorSemana => 'GASTOS POR SEMANA';
+
+  @override
+  String get desgloseCategorias => 'DESGLOSE POR CATEGORÍA';
+
+  @override
+  String get sinGastosEsteMes => 'Todavía no hay gastos este mes.';
+
+  @override
+  String valorEsteMes(String valor) {
+    return '$valor este mes';
+  }
+
+  @override
+  String get exportarPdfProTitle => 'Exportar PDF — Kash Pro';
+
+  @override
+  String get exportarPdfProMsg =>
+      'Exportar tus estadísticas en PDF es una función de Kash Pro (pago único, 2,99 €). Desbloquéala junto con el histórico de meses anteriores y los presupuestos personalizados.';
+
+  @override
+  String get editarCategoria => 'Editar categoría';
+
+  @override
+  String get nuevaCategoria => 'Nueva categoría';
+
+  @override
+  String get nombreHint => 'Nombre';
+
+  @override
+  String get emojiLabel => 'EMOJI';
+
+  @override
+  String get editarConcepto => 'Editar concepto';
+
+  @override
+  String get nuevoConcepto => 'Nuevo concepto';
+
+  @override
+  String get tipoLabel => 'TIPO';
+
+  @override
+  String get sinTipo => 'Sin tipo';
+
+  @override
+  String get descripcionConceptoHint =>
+      'Descripción (ej. comisión venta cliente Acme)';
+
+  @override
+  String get guardarConcepto => 'Guardar concepto';
+
+  @override
+  String get eliminarElementoConfirm =>
+      '¿Eliminar este elemento? Esta acción no se puede deshacer.';
 }

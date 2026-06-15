@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/cuenta.dart';
 import '../../providers/ajustes_provider.dart';
 import '../../providers/cuentas_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/kash_colors.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/bounce_button.dart';
+import '../../widgets/kash_toast.dart';
+import '../../widgets/spring_sheet.dart';
 
 class CuentasScreen extends StatelessWidget {
   const CuentasScreen({super.key});
@@ -14,13 +18,14 @@ class CuentasScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final ajustes = context.watch<AjustesProvider>();
     final provider = context.watch<CuentasProvider>();
     final cuentas = provider.cuentas;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mis cuentas'),
+        title: Text(l10n.misCuentas),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -39,7 +44,7 @@ class CuentasScreen extends StatelessWidget {
                 moneda: ajustes.moneda,
               ),
               const SizedBox(height: 28),
-              Text('TUS CUENTAS', style: theme.textTheme.labelSmall),
+              Text(l10n.tusCuentas, style: theme.textTheme.labelSmall),
               const SizedBox(height: 12),
               if (provider.cargando && cuentas.isEmpty)
                 const Padding(
@@ -69,7 +74,7 @@ class CuentasScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _NuevaCuentaSheet(modo: modo),
+      builder: (_) => SpringSheet(child: _NuevaCuentaSheet(modo: modo)),
     );
   }
 
@@ -95,6 +100,7 @@ class _PatrimonioCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       width: double.infinity,
@@ -107,14 +113,14 @@ class _PatrimonioCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('PATRIMONIO TOTAL', style: theme.textTheme.labelSmall),
+          Text(l10n.patrimonio.toUpperCase(), style: theme.textTheme.labelSmall),
           const SizedBox(height: 8),
           Text(
             formatearImporte(patrimonio, moneda: moneda),
             style: theme.textTheme.displayLarge,
           ),
           const SizedBox(height: 4),
-          Text('Solo cuentas incluidas en total', style: theme.textTheme.bodySmall),
+          Text(l10n.soloCuentasIncluidas, style: theme.textTheme.bodySmall),
         ],
       ),
     );
@@ -138,6 +144,7 @@ class _CuentaTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
     final colorSaldo = cuenta.saldo >= 0 ? colors.positive : colors.negative;
 
     return Container(
@@ -173,7 +180,7 @@ class _CuentaTile extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          'Principal',
+                          l10n.principal,
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: 9,
                             color: theme.colorScheme.primary,
@@ -186,7 +193,7 @@ class _CuentaTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  cuenta.incluirEnTotal ? 'Incluida en total' : 'No incluida en total',
+                  cuenta.incluirEnTotal ? l10n.incluidaEnTotal : l10n.noIncluidaEnTotal,
                   style: theme.textTheme.bodySmall?.copyWith(color: colors.textTertiary),
                 ),
               ],
@@ -227,6 +234,7 @@ class _NuevaCuentaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return InkWell(
       onTap: onTap,
@@ -242,7 +250,7 @@ class _NuevaCuentaCard extends StatelessWidget {
               Icon(Icons.add, size: 18, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
               Text(
-                'Nueva cuenta',
+                l10n.nuevaCuenta,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w500,
@@ -327,6 +335,7 @@ class _OpcionesCuentaSheetState extends State<_OpcionesCuentaSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.read<CuentasProvider>();
 
     return Container(
@@ -351,7 +360,7 @@ class _OpcionesCuentaSheetState extends State<_OpcionesCuentaSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          Text('ICONO', style: theme.textTheme.labelSmall),
+          Text(l10n.icono, style: theme.textTheme.labelSmall),
           const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -380,7 +389,7 @@ class _OpcionesCuentaSheetState extends State<_OpcionesCuentaSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          Text('NOMBRE', style: theme.textTheme.labelSmall),
+          Text(l10n.nombre, style: theme.textTheme.labelSmall),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -389,7 +398,7 @@ class _OpcionesCuentaSheetState extends State<_OpcionesCuentaSheet> {
                   controller: _nombreController,
                   textCapitalization: TextCapitalization.sentences,
                   style: theme.textTheme.bodyMedium,
-                  decoration: const InputDecoration(hintText: 'Nombre de la cuenta'),
+                  decoration: InputDecoration(hintText: l10n.nombreCuentaHint),
                 ),
               ),
               const SizedBox(width: 8),
@@ -419,14 +428,14 @@ class _OpcionesCuentaSheetState extends State<_OpcionesCuentaSheet> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
                       )
-                    : const Text('Guardar'),
+                    : Text(l10n.guardar),
               ),
             ],
           ),
           const SizedBox(height: 20),
           Divider(color: colors.border),
           const SizedBox(height: 12),
-          Text('ACTUALIZAR SALDO', style: theme.textTheme.labelSmall),
+          Text(l10n.actualizarSaldo, style: theme.textTheme.labelSmall),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -435,7 +444,7 @@ class _OpcionesCuentaSheetState extends State<_OpcionesCuentaSheet> {
                   controller: _saldoController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   style: theme.textTheme.bodyMedium,
-                  decoration: const InputDecoration(hintText: '0,00'),
+                  decoration: InputDecoration(hintText: l10n.hintImporte),
                 ),
               ),
               const SizedBox(width: 8),
@@ -461,7 +470,7 @@ class _OpcionesCuentaSheetState extends State<_OpcionesCuentaSheet> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
                       )
-                    : const Text('OK'),
+                    : Text(l10n.ok),
               ),
             ],
           ),
@@ -470,7 +479,7 @@ class _OpcionesCuentaSheetState extends State<_OpcionesCuentaSheet> {
           const SizedBox(height: 4),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text('Incluir en patrimonio total', style: theme.textTheme.bodyMedium),
+            title: Text(l10n.incluirEnPatrimonio, style: theme.textTheme.bodyMedium),
             value: widget.cuenta.incluirEnTotal,
             activeThumbColor: theme.colorScheme.primary,
             onChanged: (_) async {
@@ -484,7 +493,7 @@ class _OpcionesCuentaSheetState extends State<_OpcionesCuentaSheet> {
               contentPadding: EdgeInsets.zero,
               leading: Icon(Icons.star_outline, color: theme.colorScheme.primary),
               title: Text(
-                'Marcar como cuenta principal',
+                l10n.marcarComoPrincipal,
                 style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary),
               ),
               onTap: () async {
@@ -498,7 +507,7 @@ class _OpcionesCuentaSheetState extends State<_OpcionesCuentaSheet> {
             contentPadding: EdgeInsets.zero,
             leading: Icon(Icons.delete_outline, color: colors.negative),
             title: Text(
-              'Eliminar cuenta',
+              l10n.eliminarCuentaTitle,
               style: theme.textTheme.bodyMedium?.copyWith(color: colors.negative),
             ),
             onTap: () => _confirmarEliminar(context, provider),
@@ -509,19 +518,17 @@ class _OpcionesCuentaSheetState extends State<_OpcionesCuentaSheet> {
   }
 
   void _confirmarEliminar(BuildContext context, CuentasProvider provider) {
+    final l10n = AppLocalizations.of(context)!;
     Navigator.of(context).pop();
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar cuenta'),
-        content: Text(
-          '¿Seguro que quieres eliminar "${widget.cuenta.nombre}"? '
-          'También se eliminarán todos sus movimientos.',
-        ),
+        title: Text(l10n.eliminarCuentaTitle),
+        content: Text(l10n.eliminarCuentaConfirm(widget.cuenta.nombre)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancelar),
           ),
           TextButton(
             onPressed: () async {
@@ -529,7 +536,7 @@ class _OpcionesCuentaSheetState extends State<_OpcionesCuentaSheet> {
               await provider.eliminarCuenta(widget.cuenta.id!);
             },
             child: Text(
-              'Eliminar',
+              l10n.eliminar,
               style: TextStyle(color: kashColorsOf(context).negative),
             ),
           ),
@@ -586,6 +593,7 @@ class _NuevaCuentaSheetState extends State<_NuevaCuentaSheet> {
       creadoEn: now,
     ));
 
+    mostrarKashToast(context, AppLocalizations.of(context)!.cuentaCreada);
     Navigator.of(context).pop();
   }
 
@@ -593,6 +601,7 @@ class _NuevaCuentaSheetState extends State<_NuevaCuentaSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       decoration: BoxDecoration(
@@ -614,9 +623,9 @@ class _NuevaCuentaSheetState extends State<_NuevaCuentaSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          Text('Nueva cuenta', style: theme.textTheme.titleMedium),
+          Text(l10n.nuevaCuenta, style: theme.textTheme.titleMedium),
           const SizedBox(height: 20),
-          Text('ICONO', style: theme.textTheme.labelSmall),
+          Text(l10n.icono, style: theme.textTheme.labelSmall),
           const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -644,28 +653,28 @@ class _NuevaCuentaSheetState extends State<_NuevaCuentaSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          Text('NOMBRE', style: theme.textTheme.labelSmall),
+          Text(l10n.nombre, style: theme.textTheme.labelSmall),
           const SizedBox(height: 8),
           TextField(
             controller: _nombreController,
             textCapitalization: TextCapitalization.sentences,
             style: theme.textTheme.bodyMedium,
-            decoration: const InputDecoration(hintText: 'p. ej. Cuenta corriente'),
+            decoration: InputDecoration(hintText: l10n.cuentaCorrienteEjemplo),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 16),
-          Text('SALDO INICIAL (OPCIONAL)', style: theme.textTheme.labelSmall),
+          Text(l10n.saldoInicialOpcional, style: theme.textTheme.labelSmall),
           const SizedBox(height: 8),
           TextField(
             controller: _saldoController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: theme.textTheme.bodyMedium,
-            decoration: const InputDecoration(hintText: '0,00'),
+            decoration: InputDecoration(hintText: l10n.hintImporte),
           ),
           const SizedBox(height: 16),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text('Incluir en patrimonio total', style: theme.textTheme.bodyMedium),
+            title: Text(l10n.incluirEnPatrimonio, style: theme.textTheme.bodyMedium),
             value: _incluirEnTotal,
             activeThumbColor: theme.colorScheme.primary,
             onChanged: (v) => setState(() => _incluirEnTotal = v),
@@ -673,9 +682,9 @@ class _NuevaCuentaSheetState extends State<_NuevaCuentaSheet> {
           const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            child: KashBounceButton(
               onPressed: _valido ? () => _guardar(context) : null,
-              child: const Text('Crear cuenta'),
+              child: Text(l10n.crearCuentaBtn),
             ),
           ),
         ],

@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/cuenta.dart';
 import '../../models/movimiento.dart';
 import '../../providers/ajustes_provider.dart';
+import '../../providers/categorias_provider.dart';
 import '../../providers/cuentas_provider.dart';
 import '../../providers/movimientos_provider.dart';
 import '../../theme/kash_colors.dart';
-import '../../utils/constants.dart';
+import '../../widgets/bounce_button.dart';
+import '../../widgets/categoria_form_sheet.dart';
 import '../../widgets/category_grid.dart';
+import '../../widgets/kash_toast.dart';
 
 class AddMovimientoScreen extends StatefulWidget {
   const AddMovimientoScreen({super.key});
@@ -22,7 +26,7 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
   final _notaController = TextEditingController();
 
   String _tipo = TipoMovimiento.gasto;
-  String? _categoriaId;
+  int? _categoriaId;
   int? _cuentaId;
   bool _guardando = false;
 
@@ -56,7 +60,7 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
         tipo: _tipo,
         importe: importe,
         nota: nota.isEmpty ? null : nota,
-        categoria: categoriaId,
+        categoriaId: categoriaId,
         cuentaId: cuentaId,
         fecha: DateTime.now(),
         modo: ajustes.modoApp,
@@ -65,6 +69,7 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
     );
 
     if (!mounted) return;
+    mostrarKashToast(context, AppLocalizations.of(context)!.movimientoGuardado);
     Navigator.of(context).pop();
   }
 
@@ -72,9 +77,11 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
     final ajustes = context.watch<AjustesProvider>();
     final cuentas = context.watch<CuentasProvider>().cuentas;
-    final categorias = categoriasParaModo(ajustes.modoApp);
+    final categoriasProvider = context.watch<CategoriasProvider>();
+    final categorias = categoriasProvider.paraTipo(_tipo);
 
     _cuentaId ??= context.read<CuentasProvider>().cuentaPrincipal?.id ??
         (cuentas.isNotEmpty ? cuentas.first.id : null);
@@ -82,7 +89,7 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
     final esGasto = _tipo == TipoMovimiento.gasto;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Nuevo movimiento')),
+      appBar: AppBar(title: Text(l10n.nuevoMovimiento)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
@@ -101,7 +108,7 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
                 style: theme.textTheme.displayLarge?.copyWith(
                   color: esGasto ? colors.negative : colors.positive,
                 ),
-                decoration: const InputDecoration(border: InputBorder.none, hintText: '0,00'),
+                decoration: InputDecoration(border: InputBorder.none, hintText: l10n.hintImporte),
                 onChanged: (_) => setState(() {}),
               ),
             ),
@@ -110,22 +117,28 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
               controller: _notaController,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
-              decoration: const InputDecoration(hintText: 'Añadir una nota (opcional)'),
+              decoration: InputDecoration(hintText: l10n.notaOpcionalHint),
             ),
             const SizedBox(height: 28),
-            Text('CATEGORÍA', style: theme.textTheme.labelSmall),
+            Text(l10n.categoriaLabel, style: theme.textTheme.labelSmall),
             const SizedBox(height: 12),
             CategoryGrid(
               categorias: categorias,
               seleccionada: _categoriaId,
               onSeleccionar: (id) => setState(() => _categoriaId = id),
+              onAgregar: () async {
+                final nueva = await mostrarFormularioCategoria(context, modo: ajustes.modoApp);
+                if (nueva == null || !mounted) return;
+                final creada = await categoriasProvider.agregarCategoria(nueva);
+                setState(() => _categoriaId = creada.id);
+              },
             ),
             const SizedBox(height: 28),
-            Text('CUENTA', style: theme.textTheme.labelSmall),
+            Text(l10n.cuentaLabel, style: theme.textTheme.labelSmall),
             const SizedBox(height: 12),
             if (cuentas.isEmpty)
               Text(
-                'Crea primero una cuenta para poder guardar movimientos.',
+                l10n.crearCuentaPrimero,
                 style: theme.textTheme.bodySmall,
               )
             else
@@ -135,7 +148,7 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
                 children: cuentas.map((c) => _buildCuentaPill(theme, colors, c)).toList(),
               ),
             const SizedBox(height: 36),
-            ElevatedButton(
+            KashBounceButton(
               onPressed: _formularioValido ? _guardar : null,
               child: _guardando
                   ? const SizedBox(
@@ -143,7 +156,7 @@ class _AddMovimientoScreenState extends State<AddMovimientoScreen> {
                       height: 22,
                       child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.black),
                     )
-                  : const Text('Guardar'),
+                  : Text(l10n.guardar),
             ),
           ],
         ),
@@ -181,6 +194,7 @@ class _ToggleTipo extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.all(4),
@@ -191,8 +205,8 @@ class _ToggleTipo extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _opcion(theme, 'Gasto', esGasto, () => onChanged(true))),
-          Expanded(child: _opcion(theme, 'Ingreso', !esGasto, () => onChanged(false))),
+          Expanded(child: _opcion(theme, l10n.gasto, esGasto, () => onChanged(true))),
+          Expanded(child: _opcion(theme, l10n.ingreso, !esGasto, () => onChanged(false))),
         ],
       ),
     );

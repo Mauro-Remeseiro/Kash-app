@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../theme/kash_colors.dart';
+import '../widgets/spring_sheet.dart';
 
 /// Muestra el paywall Pro como un bottom sheet modal.
 /// Por ahora es una pantalla de "próximamente" sin integración de pagos.
@@ -9,7 +11,7 @@ void mostrarPaywallPro(BuildContext context) {
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (ctx) => const _PaywallSheet(),
+    builder: (ctx) => const SpringSheet(child: _PaywallSheet()),
   );
 }
 
@@ -20,6 +22,7 @@ class _PaywallSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
@@ -58,14 +61,14 @@ class _PaywallSheet extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Kash Pro',
+            l10n.kashProTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Próximamente',
+            l10n.proximamente,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.textTertiary,
             ),
@@ -73,25 +76,25 @@ class _PaywallSheet extends StatelessWidget {
           const SizedBox(height: 32),
           _FeatureRow(
             icon: Icons.sync_alt_rounded,
-            label: 'Sincronización entre dispositivos',
+            label: l10n.featureSyncDevices,
             colors: colors,
             theme: theme,
           ),
           _FeatureRow(
             icon: Icons.bar_chart_rounded,
-            label: 'Informes y exportación CSV',
+            label: l10n.featureReportsCSV,
             colors: colors,
             theme: theme,
           ),
           _FeatureRow(
             icon: Icons.people_alt_rounded,
-            label: 'Empleados y cajas ilimitadas',
+            label: l10n.featureUnlimitedEmployees,
             colors: colors,
             theme: theme,
           ),
           _FeatureRow(
             icon: Icons.palette_rounded,
-            label: 'Temas personalizados',
+            label: l10n.featureCustomThemes,
             colors: colors,
             theme: theme,
           ),
@@ -106,9 +109,9 @@ class _PaywallSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text(
-                'Avisarme cuando esté disponible',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              child: Text(
+                l10n.avisarmeDisponible,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -116,7 +119,7 @@ class _PaywallSheet extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
-              'Ahora no',
+              l10n.ahoraNO,
               style: TextStyle(color: colors.textTertiary),
             ),
           ),

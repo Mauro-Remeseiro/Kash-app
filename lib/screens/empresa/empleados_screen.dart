@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../db/database_helper.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/empleado.dart';
 import '../../models/movimiento.dart';
 import '../../providers/ajustes_provider.dart';
@@ -10,6 +11,7 @@ import '../../providers/movimientos_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/kash_colors.dart';
 import '../../utils/formatters.dart';
+import 'empleado_detalle_screen.dart';
 
 /// Total gastado por un empleado en el mes en curso, junto con si tiene algún
 /// movimiento pendiente de aprobar.
@@ -70,19 +72,16 @@ class _EmpleadosScreenState extends State<EmpleadosScreen> {
   }
 
   void _mostrarDialogoPro() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Exportar informe — Kash Pro'),
-        content: const Text(
-          'Exportar el informe de empleados en PDF es una función de Kash '
-          'Pro (pago único, 2,99 €). Desbloquéala junto con el histórico de '
-          'meses anteriores y los presupuestos personalizados.',
-        ),
+        title: Text(l10n.exportarInformeProTitle),
+        content: Text(l10n.exportarInformeProMsg),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Entendido'),
+            child: Text(l10n.entendido),
           ),
         ],
       ),
@@ -93,13 +92,14 @@ class _EmpleadosScreenState extends State<EmpleadosScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
     final ajustes = context.watch<AjustesProvider>();
     final empleadosProvider = context.watch<EmpleadosProvider>();
     final movimientosProvider = context.watch<MovimientosProvider>();
     final empleados = empleadosProvider.empleados;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Empleados')),
+      appBar: AppBar(title: Text(l10n.empleados)),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _recargar,
@@ -110,7 +110,7 @@ class _EmpleadosScreenState extends State<EmpleadosScreen> {
                 children: [
                   Expanded(
                     child: _ResumenMiniCard(
-                      etiqueta: 'EMPLEADOS',
+                      etiqueta: l10n.empleados.toUpperCase(),
                       valor: '${empleadosProvider.total}',
                       color: theme.colorScheme.primary,
                     ),
@@ -118,7 +118,7 @@ class _EmpleadosScreenState extends State<EmpleadosScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _ResumenMiniCard(
-                      etiqueta: 'PENDIENTE DE APROBAR',
+                      etiqueta: l10n.pendienteDeAprobar,
                       valor: formatearImporte(
                         movimientosProvider.importePendienteDeAprobar,
                         moneda: ajustes.moneda,
@@ -129,7 +129,7 @@ class _EmpleadosScreenState extends State<EmpleadosScreen> {
                 ],
               ),
               const SizedBox(height: 28),
-              Text('TU EQUIPO', style: theme.textTheme.labelSmall),
+              Text(l10n.tuEquipo, style: theme.textTheme.labelSmall),
               const SizedBox(height: 12),
               if (empleadosProvider.cargando && empleados.isEmpty)
                 const Padding(
@@ -141,7 +141,7 @@ class _EmpleadosScreenState extends State<EmpleadosScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Center(
                     child: Text(
-                      'Todavía no has añadido ningún empleado.',
+                      l10n.sinEmpleadosAun,
                       style: theme.textTheme.bodySmall,
                       textAlign: TextAlign.center,
                     ),
@@ -235,70 +235,79 @@ class _EmpleadoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final estadoColor = resumen.tienePendientes ? Colors.amber : colors.positive;
-    final estadoTexto = resumen.tienePendientes ? 'Pendiente' : 'Aprobado';
+    final estadoTexto = resumen.tienePendientes ? l10n.pendiente : l10n.aprobado;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
-        border: Border.all(color: colors.border),
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => EmpleadoDetalleScreen(empleado: empleado)),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.16),
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              empleado.iniciales,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w700,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: theme.cardTheme.color,
+          borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.16),
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                empleado.iniciales,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  empleado.nombre,
-                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${formatearImporte(resumen.totalGastado, moneda: moneda)} este mes',
-                  style: theme.textTheme.bodySmall?.copyWith(color: colors.textTertiary),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: estadoColor.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              estadoTexto,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: estadoColor,
-                fontWeight: FontWeight.w700,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    empleado.nombre,
+                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.valorEsteMes(formatearImporte(resumen.totalGastado, moneda: moneda)),
+                    style: theme.textTheme.bodySmall?.copyWith(color: colors.textTertiary),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: estadoColor.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                estadoTexto,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: estadoColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_right, size: 18, color: colors.textTertiary),
+          ],
+        ),
       ),
     );
   }
@@ -313,6 +322,7 @@ class _ExportarInformeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return InkWell(
       onTap: onTap,
@@ -330,7 +340,7 @@ class _ExportarInformeTile extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Exportar informe',
+                l10n.exportarInforme,
                 style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
@@ -341,7 +351,7 @@ class _ExportarInformeTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                'PRO',
+                l10n.proTag,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w700,

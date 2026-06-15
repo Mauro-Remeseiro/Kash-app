@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../db/database_helper.dart';
+import '../../l10n/app_localizations.dart';
+import '../../models/categoria.dart';
 import '../../models/movimiento.dart';
 import '../../providers/ajustes_provider.dart';
+import '../../providers/categorias_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/kash_colors.dart';
-import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/bar_chart_widget.dart';
 import '../../widgets/progress_bar.dart';
@@ -50,6 +52,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Future<_DatosEstadisticas> _cargarDatos() async {
     final ajustes = context.read<AjustesProvider>();
+    final categoriasProvider = context.read<CategoriasProvider>();
     final modo = ajustes.modoApp;
     final db = DatabaseHelper.instance;
     final ahora = DateTime.now();
@@ -94,7 +97,7 @@ class _StatsScreenState extends State<StatsScreen> {
     final categorias = filasCategoria.map((fila) {
       final total = (fila['total'] as num).toDouble();
       return (
-        categoria: categoriaPorId(fila['categoria'] as String),
+        categoria: categoriasProvider.categoriaPorId(fila['categoria_id'] as int?),
         total: total,
         porcentaje: totalMes > 0 ? total / totalMes : 0.0,
       );
@@ -111,19 +114,16 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   void _mostrarDialogoPro() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Exportar PDF — Kash Pro'),
-        content: const Text(
-          'Exportar tus estadísticas en PDF es una función de Kash Pro '
-          '(pago único, 2,99 €). Desbloquéala junto con el histórico de '
-          'meses anteriores y los presupuestos personalizados.',
-        ),
+        title: Text(l10n.exportarPdfProTitle),
+        content: Text(l10n.exportarPdfProMsg),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Entendido'),
+            child: Text(l10n.entendido),
           ),
         ],
       ),
@@ -134,10 +134,11 @@ class _StatsScreenState extends State<StatsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
     final ajustes = context.watch<AjustesProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Estadísticas')),
+      appBar: AppBar(title: Text(l10n.estadisticasTitle)),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _recargar,
@@ -160,25 +161,25 @@ class _StatsScreenState extends State<StatsScreen> {
               return ListView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                 children: [
-                  Text('TOTAL DEL MES', style: theme.textTheme.labelSmall),
+                  Text(l10n.totalDelMes, style: theme.textTheme.labelSmall),
                   const SizedBox(height: 6),
                   Text(
                     formatearImporte(datos.totalMes, moneda: ajustes.moneda),
                     style: theme.textTheme.displayLarge,
                   ),
                   const SizedBox(height: 32),
-                  Text('GASTOS POR SEMANA', style: theme.textTheme.labelSmall),
+                  Text(l10n.gastosPorSemana, style: theme.textTheme.labelSmall),
                   const SizedBox(height: 16),
                   BarChartWidget(barras: datos.barras),
                   const SizedBox(height: 32),
-                  Text('DESGLOSE POR CATEGORÍA', style: theme.textTheme.labelSmall),
+                  Text(l10n.desgloseCategorias, style: theme.textTheme.labelSmall),
                   const SizedBox(height: 16),
                   if (datos.categorias.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 24),
                       child: Center(
                         child: Text(
-                          'Todavía no hay gastos este mes.',
+                          l10n.sinGastosEsteMes,
                           style: theme.textTheme.bodySmall,
                           textAlign: TextAlign.center,
                         ),
@@ -261,6 +262,7 @@ class _ExportarPdfTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return InkWell(
       onTap: onTap,
@@ -278,7 +280,7 @@ class _ExportarPdfTile extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Exportar PDF',
+                l10n.exportarPdf,
                 style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
@@ -289,7 +291,7 @@ class _ExportarPdfTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                'PRO',
+                l10n.proTag,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w700,

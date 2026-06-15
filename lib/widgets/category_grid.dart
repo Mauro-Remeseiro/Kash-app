@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../models/categoria.dart';
 import '../theme/app_theme.dart';
 import '../theme/kash_colors.dart';
-import '../utils/constants.dart';
 
 class CategoryGrid extends StatelessWidget {
   const CategoryGrid({
@@ -10,21 +10,24 @@ class CategoryGrid extends StatelessWidget {
     required this.categorias,
     required this.seleccionada,
     required this.onSeleccionar,
+    this.onAgregar,
   });
 
   final List<Categoria> categorias;
-  final String? seleccionada;
-  final ValueChanged<String> onSeleccionar;
+  final int? seleccionada;
+  final ValueChanged<int> onSeleccionar;
+  final VoidCallback? onAgregar;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final mostrarAgregar = onAgregar != null;
 
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: categorias.length,
+      itemCount: categorias.length + (mostrarAgregar ? 1 : 0),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         mainAxisSpacing: 10,
@@ -32,13 +35,31 @@ class CategoryGrid extends StatelessWidget {
         childAspectRatio: 1.4,
       ),
       itemBuilder: (context, index) {
+        if (mostrarAgregar && index == categorias.length) {
+          return InkWell(
+            onTap: onAgregar,
+            borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+                border: Border.all(color: colors.border),
+              ),
+              alignment: Alignment.center,
+              child: Icon(Icons.add, size: 22, color: colors.textTertiary),
+            ),
+          );
+        }
+
         final categoria = categorias[index];
         final activa = categoria.id == seleccionada;
         final colorBorde = activa ? theme.colorScheme.primary : colors.border;
         final colorFondo = activa ? colors.accentDim : theme.cardTheme.color;
 
         return InkWell(
-          onTap: () => onSeleccionar(categoria.id),
+          onTap: () {
+            final id = categoria.id;
+            if (id != null) onSeleccionar(id);
+          },
           borderRadius: BorderRadius.circular(AppTheme.cardRadius),
           child: Container(
             decoration: BoxDecoration(

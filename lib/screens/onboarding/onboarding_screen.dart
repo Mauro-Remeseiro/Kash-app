@@ -491,7 +491,8 @@ class _PageSeguridadState extends State<_PageSeguridad> with TickerProviderState
         await AuthService.savePin(_newPin!);
         setState(() { _pinGuardado = true; _pinError = ''; });
       } else {
-        setState(() { _input.clear(); _pinError = 'Los PINs no coinciden'; });
+        final l10n = AppLocalizations.of(context)!;
+        setState(() { _input.clear(); _pinError = l10n.pinesNoCoinciden; });
         _shakeCtrl.forward(from: 0);
       }
     }
@@ -504,9 +505,10 @@ class _PageSeguridadState extends State<_PageSeguridad> with TickerProviderState
   }
 
   String get _pinTitle {
-    if (_pinGuardado) return '✓ PIN guardado';
-    if (_pinStep == 2) return 'Confirmar PIN';
-    return 'Nuevo PIN';
+    final l10n = AppLocalizations.of(context)!;
+    if (_pinGuardado) return l10n.pinGuardadoCheck;
+    if (_pinStep == 2) return l10n.confirmarPin;
+    return l10n.nuevoPin;
   }
 
   @override
@@ -568,7 +570,7 @@ class _PageSeguridadState extends State<_PageSeguridad> with TickerProviderState
                           if (_pinStep == 0 && !_pinGuardado)
                             GestureDetector(
                               onTap: () => setState(() { _pinStep = 1; _input.clear(); }),
-                              child: const Text('Crear', style: TextStyle(color: _accent, fontWeight: FontWeight.w600)),
+                              child: Text(l10n.crear, style: const TextStyle(color: _accent, fontWeight: FontWeight.w600)),
                             ),
                         ],
                       ),

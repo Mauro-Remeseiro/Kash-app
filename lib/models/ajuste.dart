@@ -5,6 +5,7 @@ class ClaveAjuste {
   static const String presupuestoMensual    = 'presupuesto_mensual';
   static const String moneda                = 'moneda';
   static const String onboardingCompletado  = 'onboarding_completado';
+  static const String kashAiUso             = 'kash_ai_uso';
 }
 
 /// Valores posibles para el ajuste `tema`.

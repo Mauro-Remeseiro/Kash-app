@@ -33,8 +33,10 @@
   "idioma": "Langue",
   "pais": "Pays",
   "moneda": "Devise",
+  "paisYMoneda": "Pays et devise",
   "inicio": "Accueil",
   "estadisticas": "Stats",
+  "estadisticasTitle": "Statistiques",
   "cuentas": "Comptes",
   "categorias": "Catégories",
   "empleados": "Employés",
@@ -52,11 +54,19 @@
   "pinIncorrecto": "PIN incorrect",
   "intentosRestantes": "{n} tentatives restantes",
   "@intentosRestantes": {
-    "placeholders": { "n": { "type": "int" } }
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   },
   "bloqueadoSegundos": "Verrouillé {s}s",
   "@bloqueadoSegundos": {
-    "placeholders": { "s": { "type": "int" } }
+    "placeholders": {
+      "s": {
+        "type": "int"
+      }
+    }
   },
   "tusFinanzas": "Vos finances, protégées",
   "modoPodrasCambiar": "Vous pourrez le changer dans Paramètres",
@@ -78,5 +88,188 @@
   "nuevoPin": "Nouveau PIN",
   "confirmarPin": "Confirmer le PIN",
   "pinesNoCoinciden": "Les PINs ne correspondent pas",
-  "bloqueado": "Verrouillé"
+  "crear": "Créer",
+  "pinGuardadoCheck": "✓ PIN enregistré",
+  "bloqueado": "Verrouillé",
+  "filtroSemana": "Semaine",
+  "filtroMes": "Mois",
+  "filtroTodo": "Tout",
+  "gastadoDeTotal": "{gastado} sur {total}",
+  "sinPresupuestoDefinido": "Aucun budget défini",
+  "confirmarEliminarMovimiento": "Supprimer ce mouvement ? Cette action est irréversible.",
+  "movimientoEliminado": "Mouvement supprimé",
+  "sinMovimientosPeriodo": "Aucun mouvement sur cette période",
+  "sistemaTema": "Système",
+  "claroTema": "Clair",
+  "oscuroTema": "Sombre",
+  "categoriasLabel": "CATÉGORIES",
+  "misCategorias": "Mes catégories",
+  "kashAiLabel": "KASH AI",
+  "huellaOFaceId": "Empreinte ou Face ID à l'ouverture",
+  "claveApiAnthropic": "Clé API Anthropic",
+  "kashAiActivo": "Kash AI est activé. {n} requêtes restantes ce mois-ci.",
+  "kashAiInactivo": "Saisissez votre clé pour activer l'assistant Kash AI.",
+  "skAntHint": "sk-ant-...",
+  "apiKeyGuardada": "Clé API enregistrée",
+  "apiKeyEliminada": "Clé API supprimée",
+  "entendido": "Compris",
+  "hintImporte": "0,00",
+  "sinCategoriasAun": "Vous n'avez encore aucune catégorie.",
+  "eliminarCategoriaTitle": "Supprimer la catégorie",
+  "eliminarCategoriaConfirm": "Voulez-vous vraiment supprimer « {nombre} » ?",
+  "categoriaPersonalizada": "Personnalisée",
+  "sinMovimientosCategoria": "Aucun mouvement",
+  "unMovimiento": "1 mouvement",
+  "nMovimientos": "{n} mouvements",
+  "moverMovimientosTitle": "Déplacer les mouvements vers...",
+  "reasignarMovimientosMsg": "« {nombre} » contient des mouvements associés. Choisissez la catégorie vers laquelle les déplacer avant de la supprimer.",
+  "totalEsteMes": "TOTAL CE MOIS-CI",
+  "eliminarConceptoTitle": "Supprimer l'élément",
+  "eliminarConceptoConfirm": "Voulez-vous vraiment supprimer cet élément ?",
+  "tipoSueldo": "Salaire",
+  "tipoComision": "Commission",
+  "tipoBonus": "Prime",
+  "tipoDieta": "Indemnité",
+  "tipoOtro": "Autre",
+  "concepto": "Élément",
+  "conceptosLabel": "ÉLÉMENTS",
+  "sinConceptosAun": "Aucun élément pour cet employé pour l'instant.",
+  "pendiente": "En attente",
+  "aprobarTodos": "Tout approuver",
+  "pendienteDeAprobar": "EN ATTENTE D'APPROBATION",
+  "tuEquipo": "VOTRE ÉQUIPE",
+  "sinEmpleadosAun": "Vous n'avez encore ajouté aucun employé.",
+  "exportarInforme": "Exporter le rapport",
+  "proTag": "PRO",
+  "exportarInformeProTitle": "Exporter le rapport — Kash Pro",
+  "exportarInformeProMsg": "Exporter le rapport des employés en PDF est une fonctionnalité de Kash Pro (paiement unique de 2,99 €). Débloquez-la avec l'historique des mois précédents et les budgets personnalisés.",
+  "aprobado": "Approuvé",
+  "nuevoMovimiento": "Nouveau mouvement",
+  "categoriaLabel": "CATÉGORIE",
+  "cuentaLabel": "COMPTE",
+  "crearCuentaPrimero": "Créez d'abord un compte pour pouvoir enregistrer des mouvements.",
+  "asignarAEmpleado": "ASSIGNER À UN EMPLOYÉ",
+  "sinAsignar": "Non assigné",
+  "conceptoHint": "Libellé (p. ex. Facture fournisseur)",
+  "gasto": "Dépense",
+  "ingreso": "Revenu",
+  "movimientoGuardado": "Mouvement enregistré",
+  "clienteLabel": "Client",
+  "gastoFijoLabel": "Dépense fixe",
+  "empleadoLabel": "Employé",
+  "kashAiTitleSparkle": "Kash AI ✨",
+  "consultasEsteMes": "{n} requêtes ce mois-ci",
+  "limiteMensualAlcanzado": "Limite mensuelle atteinte",
+  "sugerenciaAhorro": "Combien puis-je économiser ?",
+  "sugerenciaGastoMayor": "Sur quoi dépensé-je le plus ?",
+  "sugerenciaQuePasaSi": "Que se passe-t-il si je dépense 50 € de plus ?",
+  "sugerenciaAnalizaMes": "Analyse mon mois",
+  "kashAiEmptyState": "Posez-moi vos questions\nsur vos finances",
+  "preguntaKashAiHint": "Demandez à Kash AI...",
+  "kashAiSinApiKey": "Configurez votre clé API Anthropic dans Réglages › Kash AI pour commencer à discuter.",
+  "separadorO": "ou",
+  "kashProTitle": "Kash Pro",
+  "proximamente": "Bientôt disponible",
+  "featureSyncDevices": "Synchronisation entre appareils",
+  "featureReportsCSV": "Rapports et export CSV",
+  "featureUnlimitedEmployees": "Employés et caisses illimités",
+  "featureCustomThemes": "Thèmes personnalisés",
+  "avisarmeDisponible": "Me prévenir quand ce sera disponible",
+  "notaOpcionalHint": "Ajouter une note (facultatif)",
+  "misCuentas": "Mes comptes",
+  "tusCuentas": "VOS COMPTES",
+  "soloCuentasIncluidas": "Seuls les comptes inclus dans le total",
+  "principal": "Principal",
+  "incluidaEnTotal": "Inclus dans le total",
+  "noIncluidaEnTotal": "Exclu du total",
+  "icono": "ICÔNE",
+  "nombre": "NOM",
+  "nombreCuentaHint": "Nom du compte",
+  "actualizarSaldo": "METTRE À JOUR LE SOLDE",
+  "ok": "OK",
+  "incluirEnPatrimonio": "Inclure dans le patrimoine total",
+  "marcarComoPrincipal": "Définir comme compte principal",
+  "eliminarCuentaTitle": "Supprimer le compte",
+  "eliminarCuentaConfirm": "Voulez-vous vraiment supprimer « {nombre} » ? Tous ses mouvements seront également supprimés.",
+  "saldoInicialOpcional": "SOLDE INITIAL (FACULTATIF)",
+  "cuentaCorrienteEjemplo": "p. ex. Compte courant",
+  "crearCuentaBtn": "Créer un compte",
+  "cuentaCreada": "Compte créé",
+  "totalDelMes": "TOTAL DU MOIS",
+  "gastosPorSemana": "DÉPENSES PAR SEMAINE",
+  "desgloseCategorias": "RÉPARTITION PAR CATÉGORIE",
+  "sinGastosEsteMes": "Aucune dépense ce mois-ci pour l'instant.",
+  "valorEsteMes": "{valor} ce mois-ci",
+  "@valorEsteMes": {
+    "placeholders": {
+      "valor": {
+        "type": "String"
+      }
+    }
+  },
+  "exportarPdfProTitle": "Exporter le PDF — Kash Pro",
+  "exportarPdfProMsg": "Exporter vos statistiques en PDF est une fonctionnalité de Kash Pro (paiement unique de 2,99 €). Débloquez-la avec l'historique des mois précédents et les budgets personnalisés.",
+  "editarCategoria": "Modifier la catégorie",
+  "nuevaCategoria": "Nouvelle catégorie",
+  "nombreHint": "Nom",
+  "emojiLabel": "EMOJI",
+  "editarConcepto": "Modifier l'élément",
+  "nuevoConcepto": "Nouvel élément",
+  "tipoLabel": "TYPE",
+  "sinTipo": "Aucun type",
+  "descripcionConceptoHint": "Description (ex. commission vente client Acme)",
+  "guardarConcepto": "Enregistrer l'élément",
+  "eliminarElementoConfirm": "Supprimer cet élément ? Cette action est irréversible.",
+  "@gastadoDeTotal": {
+    "placeholders": {
+      "gastado": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "@kashAiActivo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@eliminarCategoriaConfirm": {
+    "placeholders": {
+      "nombre": {
+        "type": "String"
+      }
+    }
+  },
+  "@nMovimientos": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@reasignarMovimientosMsg": {
+    "placeholders": {
+      "nombre": {
+        "type": "String"
+      }
+    }
+  },
+  "@consultasEsteMes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@eliminarCuentaConfirm": {
+    "placeholders": {
+      "nombre": {
+        "type": "String"
+      }
+    }
+  }
 }

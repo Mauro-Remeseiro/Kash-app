@@ -1,27 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
+import '../../models/categoria.dart';
 import '../../models/cuenta.dart';
 import '../../models/movimiento.dart';
 import '../../providers/ajustes_provider.dart';
+import '../../providers/categorias_provider.dart';
 import '../../providers/cuentas_provider.dart';
 import '../../providers/empleados_provider.dart';
 import '../../providers/movimientos_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/kash_colors.dart';
-import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/confirm_dialog.dart';
+import '../../widgets/kash_toast.dart';
+import '../../widgets/swipe_delete_background.dart';
+import '../kash_ai/kash_ai_screen.dart';
 import 'empleados_screen.dart';
 import 'empresa_add_screen.dart';
 
 class EmpresaHomeScreen extends StatelessWidget {
   const EmpresaHomeScreen({super.key});
 
-  FiltroPeriodo _filtroPorEtiqueta(String e) {
-    switch (e) {
-      case 'Semana': return FiltroPeriodo.semana;
-      case 'Todo': return FiltroPeriodo.todo;
-      default: return FiltroPeriodo.mes;
+  String _labelFiltro(AppLocalizations l10n, FiltroPeriodo f) {
+    switch (f) {
+      case FiltroPeriodo.semana: return l10n.filtroSemana;
+      case FiltroPeriodo.todo:   return l10n.filtroTodo;
+      case FiltroPeriodo.mes:    return l10n.filtroMes;
     }
   }
 
@@ -29,10 +35,12 @@ class EmpresaHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
     final ajustes = context.watch<AjustesProvider>();
     final movimientosProvider = context.watch<MovimientosProvider>();
     final cuentasProvider = context.watch<CuentasProvider>();
     final empleadosProvider = context.watch<EmpleadosProvider>();
+    final categoriasProvider = context.watch<CategoriasProvider>();
 
     final movimientos = movimientosProvider.movimientos;
     final balance = movimientosProvider.balance;
@@ -79,28 +87,48 @@ class EmpresaHomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Text(
-                    'Kash',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Row(
+                    children: [
+                      InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const KashAiScreen()),
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Text('✨', style: TextStyle(fontSize: 16)),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Kash',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-              Text('BALANCE DEL MES', style: theme.textTheme.labelSmall),
+              Text(l10n.balanceEsteMes, style: theme.textTheme.labelSmall),
               const SizedBox(height: 6),
-              Text(
-                '$signoBalance ${formatearImporte(balance.abs(), moneda: ajustes.moneda)}',
-                style: theme.textTheme.displayLarge?.copyWith(color: colorBalance),
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(end: balance.abs()),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                builder: (context, value, _) => Text(
+                  '$signoBalance ${formatearImporte(value, moneda: ajustes.moneda)}',
+                  style: theme.textTheme.displayLarge?.copyWith(color: colorBalance),
+                ),
               ),
               const SizedBox(height: 20),
               Row(
                 children: [
                   Expanded(
                     child: _ResumenCard(
-                      etiqueta: 'INGRESOS',
+                      etiqueta: l10n.ingresos.toUpperCase(),
                       valor: formatearImporte(movimientosProvider.totalIngresos, moneda: ajustes.moneda),
                       color: colors.positive,
                     ),
@@ -108,7 +136,7 @@ class EmpresaHomeScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _ResumenCard(
-                      etiqueta: 'GASTOS',
+                      etiqueta: l10n.gastos.toUpperCase(),
                       valor: formatearImporte(movimientosProvider.totalGastos, moneda: ajustes.moneda),
                       color: colors.negative,
                     ),
@@ -123,13 +151,12 @@ class EmpresaHomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Row(
-                children: etiquetasFiltroPeriodo.map((etiqueta) {
-                  final filtro = _filtroPorEtiqueta(etiqueta);
+                children: FiltroPeriodo.values.map((filtro) {
                   final activo = movimientosProvider.filtro == filtro;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
-                      label: Text(etiqueta),
+                      label: Text(_labelFiltro(l10n, filtro)),
                       selected: activo,
                       onSelected: (_) => movimientosProvider.cambiarFiltro(filtro),
                       labelStyle: theme.textTheme.bodySmall?.copyWith(
@@ -147,7 +174,7 @@ class EmpresaHomeScreen extends StatelessWidget {
                 }).toList(),
               ),
               const SizedBox(height: 16),
-              Text('ÚLTIMOS MOVIMIENTOS', style: theme.textTheme.labelSmall),
+              Text(l10n.ultimosMovimientos, style: theme.textTheme.labelSmall),
               const SizedBox(height: 8),
               if (movimientosProvider.cargando)
                 const Padding(
@@ -159,7 +186,7 @@ class EmpresaHomeScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 32),
                   child: Center(
                     child: Text(
-                      'Todavía no hay movimientos en este periodo.',
+                      l10n.sinMovimientos,
                       style: theme.textTheme.bodySmall,
                       textAlign: TextAlign.center,
                     ),
@@ -167,10 +194,29 @@ class EmpresaHomeScreen extends StatelessWidget {
                 )
               else
                 ...movimientos.map(
-                  (m) => _MovimientoEmpresaRow(
-                    movimiento: m,
-                    moneda: ajustes.moneda,
-                    empleadosProvider: empleadosProvider,
+                  (m) => Dismissible(
+                    key: ValueKey('movimiento-${m.id}'),
+                    direction: DismissDirection.endToStart,
+                    background: const SwipeDeleteBackground(),
+                    confirmDismiss: (_) => confirmarEliminacion(
+                      context,
+                      mensaje: l10n.confirmarEliminarMovimiento,
+                    ),
+                    onDismissed: (_) async {
+                      await movimientosProvider.eliminarMovimiento(
+                        m.id!,
+                        cuentasProvider: cuentasProvider,
+                      );
+                      if (context.mounted) {
+                        mostrarKashToast(context, l10n.movimientoEliminado, icon: Icons.delete_outline);
+                      }
+                    },
+                    child: _MovimientoEmpresaRow(
+                      movimiento: m,
+                      categoria: categoriasProvider.categoriaPorId(m.categoriaId),
+                      moneda: ajustes.moneda,
+                      empleadosProvider: empleadosProvider,
+                    ),
                   ),
                 ),
             ],
@@ -198,13 +244,14 @@ class _CuentaPills extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
           _Pill(
-            label: 'Todo',
+            label: l10n.filtroTodo,
             activa: seleccionadaId == null,
             onTap: () => onSeleccionar(null),
             theme: theme,
@@ -311,29 +358,31 @@ class _ResumenCard extends StatelessWidget {
 class _MovimientoEmpresaRow extends StatelessWidget {
   const _MovimientoEmpresaRow({
     required this.movimiento,
+    required this.categoria,
     required this.moneda,
     required this.empleadosProvider,
   });
 
   final Movimiento movimiento;
+  final Categoria categoria;
   final String moneda;
   final EmpleadosProvider empleadosProvider;
 
-  String _etiquetaTipo() {
+  String _etiquetaTipo(AppLocalizations l10n) {
     final empleadoId = movimiento.empleadoId;
     if (empleadoId != null) {
       final empleado = empleadosProvider.porId(empleadoId);
-      return empleado != null ? 'Empleado · ${empleado.nombre}' : 'Empleado';
+      return empleado != null ? '${l10n.empleadoLabel} · ${empleado.nombre}' : l10n.empleadoLabel;
     }
-    if (movimiento.categoria == 'clientes') return 'Cliente';
-    return 'Gasto fijo';
+    if (categoria.nombre.toLowerCase() == 'clientes') return l10n.clienteLabel;
+    return l10n.gastoFijoLabel;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
-    final categoria = categoriaPorId(movimiento.categoria);
+    final l10n = AppLocalizations.of(context)!;
     final colorImporte = movimiento.esIngreso ? colors.positive : colors.negative;
     final signo = movimiento.esIngreso ? '+' : '−';
 
@@ -367,7 +416,7 @@ class _MovimientoEmpresaRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${_etiquetaTipo()} · ${formatearFechaCorta(movimiento.fecha)}',
+                  '${_etiquetaTipo(l10n)} · ${formatearFechaCorta(movimiento.fecha)}',
                   style: theme.textTheme.bodySmall,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

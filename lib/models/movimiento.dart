@@ -8,7 +8,7 @@ class Movimiento {
   final String tipo;
   final double importe;
   final String? nota;
-  final String categoria;
+  final int? categoriaId;
   final int cuentaId;
   final int? empleadoId;
   final DateTime fecha;
@@ -20,7 +20,7 @@ class Movimiento {
     required this.tipo,
     required this.importe,
     this.nota,
-    required this.categoria,
+    this.categoriaId,
     required this.cuentaId,
     this.empleadoId,
     required this.fecha,
@@ -39,7 +39,7 @@ class Movimiento {
       tipo: map['tipo'] as String,
       importe: (map['importe'] as num).toDouble(),
       nota: map['nota'] as String?,
-      categoria: map['categoria'] as String,
+      categoriaId: map['categoria_id'] as int?,
       cuentaId: map['cuenta_id'] as int,
       empleadoId: map['empleado_id'] as int?,
       fecha: DateTime.parse(map['fecha'] as String),
@@ -53,7 +53,7 @@ class Movimiento {
       'tipo': tipo,
       'importe': importe,
       'nota': nota,
-      'categoria': categoria,
+      'categoria_id': categoriaId,
       'cuenta_id': cuentaId,
       'empleado_id': empleadoId,
       'fecha': fecha.toIso8601String(),
@@ -69,7 +69,7 @@ class Movimiento {
     String? tipo,
     double? importe,
     String? nota,
-    String? categoria,
+    int? categoriaId,
     int? cuentaId,
     int? empleadoId,
     DateTime? fecha,
@@ -81,7 +81,7 @@ class Movimiento {
       tipo: tipo ?? this.tipo,
       importe: importe ?? this.importe,
       nota: nota ?? this.nota,
-      categoria: categoria ?? this.categoria,
+      categoriaId: categoriaId ?? this.categoriaId,
       cuentaId: cuentaId ?? this.cuentaId,
       empleadoId: empleadoId ?? this.empleadoId,
       fecha: fecha ?? this.fecha,

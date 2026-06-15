@@ -15,6 +15,7 @@ class AjustesProvider extends ChangeNotifier {
   double _presupuestoMensual = 0;
   String _moneda = 'EUR';
   bool _onboardingCompletado = false;
+  String _kashAiUso = '';
 
   bool get cargado => _cargado;
   String get modoApp => _modoApp;
@@ -22,6 +23,25 @@ class AjustesProvider extends ChangeNotifier {
   double get presupuestoMensual => _presupuestoMensual;
   String get moneda => _moneda;
   bool get onboardingCompletado => _onboardingCompletado;
+
+  /// Consultas a Kash AI permitidas por mes en el plan gratuito.
+  static const int kashAiLimiteMensual = 10;
+
+  String get _mesActual {
+    final ahora = DateTime.now();
+    return '${ahora.year}-${ahora.month.toString().padLeft(2, '0')}';
+  }
+
+  /// Consultas a Kash AI ya realizadas en el mes en curso.
+  int get kashAiConsultasUsadas {
+    final partes = _kashAiUso.split(':');
+    if (partes.length != 2 || partes[0] != _mesActual) return 0;
+    return int.tryParse(partes[1]) ?? 0;
+  }
+
+  /// Consultas a Kash AI restantes en el mes en curso (plan gratuito).
+  int get kashAiConsultasRestantes =>
+      (kashAiLimiteMensual - kashAiConsultasUsadas).clamp(0, kashAiLimiteMensual);
 
   bool get esModoEmpresa => _modoApp == ModoApp.empresa;
 
@@ -48,8 +68,20 @@ class AjustesProvider extends ChangeNotifier {
     _moneda = valores[ClaveAjuste.moneda] ?? _moneda;
     _onboardingCompletado =
         (valores[ClaveAjuste.onboardingCompletado] ?? '0') == '1';
+    _kashAiUso = valores[ClaveAjuste.kashAiUso] ?? '';
     _cargado = true;
     notifyListeners();
+  }
+
+  /// Registra una consulta a Kash AI. Devuelve `false` si ya se alcanzó el
+  /// límite mensual del plan gratuito y la consulta no debe enviarse.
+  Future<bool> registrarConsultaKashAi() async {
+    final usadas = kashAiConsultasUsadas;
+    if (usadas >= kashAiLimiteMensual) return false;
+    _kashAiUso = '$_mesActual:${usadas + 1}';
+    notifyListeners();
+    await _db.setAjuste(ClaveAjuste.kashAiUso, _kashAiUso);
+    return true;
   }
 
   Future<void> completarOnboarding() async {

@@ -33,8 +33,10 @@
   "idioma": "Sprache",
   "pais": "Land",
   "moneda": "Währung",
+  "paisYMoneda": "Land und Währung",
   "inicio": "Startseite",
   "estadisticas": "Stats",
+  "estadisticasTitle": "Statistiken",
   "cuentas": "Konten",
   "categorias": "Kategorien",
   "empleados": "Mitarbeiter",
@@ -52,11 +54,19 @@
   "pinIncorrecto": "Falscher PIN",
   "intentosRestantes": "{n} Versuche verbleibend",
   "@intentosRestantes": {
-    "placeholders": { "n": { "type": "int" } }
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   },
   "bloqueadoSegundos": "Gesperrt {s}s",
   "@bloqueadoSegundos": {
-    "placeholders": { "s": { "type": "int" } }
+    "placeholders": {
+      "s": {
+        "type": "int"
+      }
+    }
   },
   "tusFinanzas": "Deine Finanzen, geschützt",
   "modoPodrasCambiar": "Du kannst das später in den Einstellungen ändern",
@@ -78,5 +88,188 @@
   "nuevoPin": "Neuer PIN",
   "confirmarPin": "PIN bestätigen",
   "pinesNoCoinciden": "PINs stimmen nicht überein",
-  "bloqueado": "Gesperrt"
+  "crear": "Erstellen",
+  "pinGuardadoCheck": "✓ PIN gespeichert",
+  "bloqueado": "Gesperrt",
+  "filtroSemana": "Woche",
+  "filtroMes": "Monat",
+  "filtroTodo": "Alle",
+  "gastadoDeTotal": "{gastado} von {total}",
+  "sinPresupuestoDefinido": "Kein Budget festgelegt",
+  "confirmarEliminarMovimiento": "Diese Buchung löschen? Diese Aktion kann nicht widerrufen werden.",
+  "movimientoEliminado": "Buchung gelöscht",
+  "sinMovimientosPeriodo": "Keine Buchungen in diesem Zeitraum",
+  "sistemaTema": "System",
+  "claroTema": "Hell",
+  "oscuroTema": "Dunkel",
+  "categoriasLabel": "KATEGORIEN",
+  "misCategorias": "Meine Kategorien",
+  "kashAiLabel": "KASH AI",
+  "huellaOFaceId": "Fingerabdruck oder Face ID beim Start",
+  "claveApiAnthropic": "Anthropic-API-Schlüssel",
+  "kashAiActivo": "Kash AI ist aktiviert. {n} Abfragen in diesem Monat übrig.",
+  "kashAiInactivo": "Gib deinen Schlüssel ein, um den Kash-AI-Assistenten zu aktivieren.",
+  "skAntHint": "sk-ant-...",
+  "apiKeyGuardada": "API-Schlüssel gespeichert",
+  "apiKeyEliminada": "API-Schlüssel gelöscht",
+  "entendido": "Verstanden",
+  "hintImporte": "0,00",
+  "sinCategoriasAun": "Du hast noch keine Kategorien.",
+  "eliminarCategoriaTitle": "Kategorie löschen",
+  "eliminarCategoriaConfirm": "Möchtest du \"{nombre}\" wirklich löschen?",
+  "categoriaPersonalizada": "Benutzerdefiniert",
+  "sinMovimientosCategoria": "Keine Buchungen",
+  "unMovimiento": "1 Buchung",
+  "nMovimientos": "{n} Buchungen",
+  "moverMovimientosTitle": "Buchungen verschieben nach...",
+  "reasignarMovimientosMsg": "\"{nombre}\" enthält zugehörige Buchungen. Wähle aus, in welche Kategorie sie verschoben werden sollen, bevor du sie löschst.",
+  "totalEsteMes": "GESAMT DIESEN MONAT",
+  "eliminarConceptoTitle": "Eintrag löschen",
+  "eliminarConceptoConfirm": "Möchtest du diesen Eintrag wirklich löschen?",
+  "tipoSueldo": "Gehalt",
+  "tipoComision": "Provision",
+  "tipoBonus": "Bonus",
+  "tipoDieta": "Spesen",
+  "tipoOtro": "Sonstiges",
+  "concepto": "Eintrag",
+  "conceptosLabel": "EINTRÄGE",
+  "sinConceptosAun": "Noch keine Einträge für diesen Mitarbeiter.",
+  "pendiente": "Ausstehend",
+  "aprobarTodos": "Alle genehmigen",
+  "pendienteDeAprobar": "GENEHMIGUNG AUSSTEHEND",
+  "tuEquipo": "DEIN TEAM",
+  "sinEmpleadosAun": "Du hast noch keine Mitarbeiter hinzugefügt.",
+  "exportarInforme": "Bericht exportieren",
+  "proTag": "PRO",
+  "exportarInformeProTitle": "Bericht exportieren — Kash Pro",
+  "exportarInformeProMsg": "Der Export des Mitarbeiterberichts als PDF ist eine Kash-Pro-Funktion (einmalige Zahlung, 2,99 €). Schalte sie zusammen mit dem Verlauf vergangener Monate und benutzerdefinierten Budgets frei.",
+  "aprobado": "Genehmigt",
+  "nuevoMovimiento": "Neue Buchung",
+  "categoriaLabel": "KATEGORIE",
+  "cuentaLabel": "KONTO",
+  "crearCuentaPrimero": "Erstelle zuerst ein Konto, um Buchungen speichern zu können.",
+  "asignarAEmpleado": "MITARBEITER ZUWEISEN",
+  "sinAsignar": "Nicht zugewiesen",
+  "conceptoHint": "Bezeichnung (z. B. Lieferantenrechnung)",
+  "gasto": "Ausgabe",
+  "ingreso": "Einnahme",
+  "movimientoGuardado": "Buchung gespeichert",
+  "clienteLabel": "Kunde",
+  "gastoFijoLabel": "Feste Ausgabe",
+  "empleadoLabel": "Mitarbeiter",
+  "kashAiTitleSparkle": "Kash AI ✨",
+  "consultasEsteMes": "{n} Abfragen diesen Monat",
+  "limiteMensualAlcanzado": "Monatslimit erreicht",
+  "sugerenciaAhorro": "Wie viel kann ich sparen?",
+  "sugerenciaGastoMayor": "Wofür gebe ich am meisten aus?",
+  "sugerenciaQuePasaSi": "Was passiert, wenn ich 50 € mehr ausgebe?",
+  "sugerenciaAnalizaMes": "Analysiere meinen Monat",
+  "kashAiEmptyState": "Frag mich alles\nüber deine Finanzen",
+  "preguntaKashAiHint": "Frag Kash AI...",
+  "kashAiSinApiKey": "Richte deinen Anthropic-API-Schlüssel unter Einstellungen › Kash AI ein, um zu chatten.",
+  "separadorO": "oder",
+  "kashProTitle": "Kash Pro",
+  "proximamente": "Demnächst",
+  "featureSyncDevices": "Synchronisierung zwischen Geräten",
+  "featureReportsCSV": "Berichte und CSV-Export",
+  "featureUnlimitedEmployees": "Unbegrenzte Mitarbeiter und Kassen",
+  "featureCustomThemes": "Benutzerdefinierte Themes",
+  "avisarmeDisponible": "Benachrichtige mich, wenn verfügbar",
+  "notaOpcionalHint": "Notiz hinzufügen (optional)",
+  "misCuentas": "Meine Konten",
+  "tusCuentas": "DEINE KONTEN",
+  "soloCuentasIncluidas": "Nur im Gesamtbetrag enthaltene Konten",
+  "principal": "Hauptkonto",
+  "incluidaEnTotal": "Im Gesamtbetrag enthalten",
+  "noIncluidaEnTotal": "Nicht im Gesamtbetrag enthalten",
+  "icono": "SYMBOL",
+  "nombre": "NAME",
+  "nombreCuentaHint": "Kontoname",
+  "actualizarSaldo": "SALDO AKTUALISIEREN",
+  "ok": "OK",
+  "incluirEnPatrimonio": "Im Gesamtvermögen einbeziehen",
+  "marcarComoPrincipal": "Als Hauptkonto festlegen",
+  "eliminarCuentaTitle": "Konto löschen",
+  "eliminarCuentaConfirm": "Möchtest du \"{nombre}\" wirklich löschen? Alle zugehörigen Buchungen werden ebenfalls gelöscht.",
+  "saldoInicialOpcional": "ANFANGSSALDO (OPTIONAL)",
+  "cuentaCorrienteEjemplo": "z. B. Girokonto",
+  "crearCuentaBtn": "Konto erstellen",
+  "cuentaCreada": "Konto erstellt",
+  "totalDelMes": "GESAMT DES MONATS",
+  "gastosPorSemana": "AUSGABEN PRO WOCHE",
+  "desgloseCategorias": "AUFSCHLÜSSELUNG NACH KATEGORIE",
+  "sinGastosEsteMes": "Noch keine Ausgaben in diesem Monat.",
+  "valorEsteMes": "{valor} diesen Monat",
+  "@valorEsteMes": {
+    "placeholders": {
+      "valor": {
+        "type": "String"
+      }
+    }
+  },
+  "exportarPdfProTitle": "PDF exportieren — Kash Pro",
+  "exportarPdfProMsg": "Der Export deiner Statistiken als PDF ist eine Kash-Pro-Funktion (einmalige Zahlung, 2,99 €). Schalte sie zusammen mit dem Verlauf vergangener Monate und benutzerdefinierten Budgets frei.",
+  "editarCategoria": "Kategorie bearbeiten",
+  "nuevaCategoria": "Neue Kategorie",
+  "nombreHint": "Name",
+  "emojiLabel": "EMOJI",
+  "editarConcepto": "Eintrag bearbeiten",
+  "nuevoConcepto": "Neuer Eintrag",
+  "tipoLabel": "TYP",
+  "sinTipo": "Kein Typ",
+  "descripcionConceptoHint": "Beschreibung (z. B. Provision Verkauf Kunde Acme)",
+  "guardarConcepto": "Eintrag speichern",
+  "eliminarElementoConfirm": "Dieses Element löschen? Diese Aktion kann nicht widerrufen werden.",
+  "@gastadoDeTotal": {
+    "placeholders": {
+      "gastado": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "@kashAiActivo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@eliminarCategoriaConfirm": {
+    "placeholders": {
+      "nombre": {
+        "type": "String"
+      }
+    }
+  },
+  "@nMovimientos": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@reasignarMovimientosMsg": {
+    "placeholders": {
+      "nombre": {
+        "type": "String"
+      }
+    }
+  },
+  "@consultasEsteMes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@eliminarCuentaConfirm": {
+    "placeholders": {
+      "nombre": {
+        "type": "String"
+      }
+    }
+  }
 }

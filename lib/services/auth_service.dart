@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
 class AuthService {
   static final LocalAuthentication _localAuth = LocalAuthentication();
   static const _storage = FlutterSecureStorage();
+  static const _secureScreenChannel = MethodChannel('com.kash.kash/secure_screen');
 
   static const _pinKey        = 'kash_pin_hash';
   static const _authEnabled   = 'kash_auth_enabled';
@@ -94,6 +96,18 @@ class AuthService {
 
   static Future<void> setBlockCapture(bool value) async {
     await _storage.write(key: _captureKey, value: value ? 'true' : 'false');
+    await applySecureScreen();
+  }
+
+  /// Aplica la preferencia de "bloquear capturas" a la ventana nativa
+  /// (FLAG_SECURE en Android). Se llama al arrancar y al cambiar el ajuste.
+  static Future<void> applySecureScreen() async {
+    final enabled = await blockCapture;
+    try {
+      await _secureScreenChannel.invokeMethod('setSecureScreen', enabled);
+    } catch (_) {
+      // No-op fuera de Android o si el canal no está disponible (tests).
+    }
   }
 }
 

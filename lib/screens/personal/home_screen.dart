@@ -1,24 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/cuenta.dart';
 import '../../providers/ajustes_provider.dart';
+import '../../providers/categorias_provider.dart';
 import '../../providers/cuentas_provider.dart';
 import '../../providers/movimientos_provider.dart';
 import '../../theme/kash_colors.dart';
-import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/confirm_dialog.dart';
+import '../../widgets/kash_toast.dart';
 import '../../widgets/movimiento_row.dart';
+import '../../widgets/swipe_delete_background.dart';
+import '../kash_ai/kash_ai_screen.dart';
 import 'add_movimiento_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  FiltroPeriodo _filtroPorEtiqueta(String e) {
-    switch (e) {
-      case 'Semana': return FiltroPeriodo.semana;
-      case 'Todo':   return FiltroPeriodo.todo;
-      default:       return FiltroPeriodo.mes;
+  String _labelFiltro(AppLocalizations l10n, FiltroPeriodo f) {
+    switch (f) {
+      case FiltroPeriodo.semana: return l10n.filtroSemana;
+      case FiltroPeriodo.todo:   return l10n.filtroTodo;
+      case FiltroPeriodo.mes:    return l10n.filtroMes;
     }
   }
 
@@ -26,9 +31,11 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme   = Theme.of(context);
     final colors  = kashColorsOf(context);
+    final l10n    = AppLocalizations.of(context)!;
     final ajustes = context.watch<AjustesProvider>();
     final movProv = context.watch<MovimientosProvider>();
     final cxProv  = context.watch<CuentasProvider>();
+    final catProv = context.watch<CategoriasProvider>();
 
     final totalGastado = movProv.totalGastos;
     final presupuesto  = ajustes.presupuestoMensual;
@@ -65,14 +72,29 @@ class HomeScreen extends StatelessWidget {
                       letterSpacing: 0.2,
                     ),
                   ),
-                  Text(
-                    'Kash',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.primary,
-                      letterSpacing: 0.4,
-                    ),
+                  Row(
+                    children: [
+                      InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const KashAiScreen()),
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Text('✨', style: TextStyle(fontSize: 16)),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Kash',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.primary,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -81,7 +103,7 @@ class HomeScreen extends StatelessWidget {
 
               // ── Número protagonista ───────────────────────────────────────
               Text(
-                'GASTADO ESTE MES',
+                l10n.gastadoEsteMes,
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w500,
@@ -90,14 +112,19 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              Text(
-                formatearImporte(totalGastado),
-                style: TextStyle(
-                  fontSize: 42,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: -1.5,
-                  color: theme.colorScheme.onSurface,
-                  height: 1.0,
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(end: totalGastado),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                builder: (context, value, _) => Text(
+                  formatearImporte(value),
+                  style: TextStyle(
+                    fontSize: 42,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: -1.5,
+                    color: theme.colorScheme.onSurface,
+                    height: 1.0,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -110,7 +137,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${formatearImporte(totalGastado)} de ${formatearImporte(presupuesto)}',
+                  l10n.gastadoDeTotal(formatearImporte(totalGastado), formatearImporte(presupuesto)),
                   style: TextStyle(
                     fontSize: 11,
                     color: colors.textTertiary,
@@ -119,7 +146,7 @@ class HomeScreen extends StatelessWidget {
                 ),
               ] else
                 Text(
-                  'Sin presupuesto definido',
+                  l10n.sinPresupuestoDefinido,
                   style: TextStyle(fontSize: 11, color: colors.textTertiary),
                 ),
 
@@ -136,13 +163,12 @@ class HomeScreen extends StatelessWidget {
 
               // ── Filtro de periodo ─────────────────────────────────────────
               Row(
-                children: etiquetasFiltroPeriodo.map((etiqueta) {
-                  final filtro = _filtroPorEtiqueta(etiqueta);
+                children: FiltroPeriodo.values.map((filtro) {
                   final activo = movProv.filtro == filtro;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: _FilterPill(
-                      label: etiqueta,
+                      label: _labelFiltro(l10n, filtro),
                       activa: activo,
                       accentColor: theme.colorScheme.primary,
                       textTertiary: colors.textTertiary,
@@ -156,7 +182,7 @@ class HomeScreen extends StatelessWidget {
 
               // ── Sección movimientos ────────────────────────────────────────
               Text(
-                'ÚLTIMOS MOVIMIENTOS',
+                l10n.ultimosMovimientos,
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w500,
@@ -173,10 +199,29 @@ class HomeScreen extends StatelessWidget {
                   child: Center(child: CircularProgressIndicator(strokeWidth: 1.5)),
                 )
               else if (movProv.movimientos.isEmpty)
-                _EmptyState(textTertiary: colors.textTertiary)
+                _EmptyState(textTertiary: colors.textTertiary, mensaje: l10n.sinMovimientosPeriodo)
               else
                 ...movProv.movimientos.map(
-                  (m) => MovimientoRow(movimiento: m, moneda: ajustes.moneda),
+                  (m) => Dismissible(
+                    key: ValueKey('movimiento-${m.id}'),
+                    direction: DismissDirection.endToStart,
+                    background: const SwipeDeleteBackground(),
+                    confirmDismiss: (_) => confirmarEliminacion(
+                      context,
+                      mensaje: l10n.confirmarEliminarMovimiento,
+                    ),
+                    onDismissed: (_) async {
+                      await movProv.eliminarMovimiento(m.id!, cuentasProvider: cxProv);
+                      if (context.mounted) {
+                        mostrarKashToast(context, l10n.movimientoEliminado, icon: Icons.delete_outline);
+                      }
+                    },
+                    child: MovimientoRow(
+                      movimiento: m,
+                      categoria: catProv.categoriaPorId(m.categoriaId),
+                      moneda: ajustes.moneda,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -274,13 +319,14 @@ class _CuentaPills extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme  = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n   = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
           _AccountPill(
-            label: 'Todo',
+            label: l10n.filtroTodo,
             activa: seleccionadaId == null,
             accentColor: theme.colorScheme.primary,
             textTertiary: colors.textTertiary,
@@ -395,9 +441,10 @@ class _FilterPill extends StatelessWidget {
 // ─── Estado vacío ──────────────────────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.textTertiary});
+  const _EmptyState({required this.textTertiary, required this.mensaje});
 
   final Color textTertiary;
+  final String mensaje;
 
   @override
   Widget build(BuildContext context) {
@@ -413,7 +460,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Sin movimientos en este periodo',
+            mensaje,
             style: TextStyle(
               fontSize: 13,
               color: textTertiary,

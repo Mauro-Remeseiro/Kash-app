@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/ajuste.dart';
 import '../../models/caja.dart';
 import '../../providers/ajustes_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/auth_service.dart';
+import '../../services/kash_ai_service.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/kash_colors.dart';
 import '../../utils/cambiar_modo.dart';
 import '../../utils/countries.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/bounce_button.dart';
+import 'categorias_screen.dart';
 
 class AjustesScreen extends StatelessWidget {
   const AjustesScreen({super.key});
 
   void _editarPresupuesto(BuildContext context, AjustesProvider ajustes) {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(
       text: ajustes.presupuestoMensual > 0
           ? ajustes.presupuestoMensual.toStringAsFixed(2).replaceAll('.', ',')
@@ -24,17 +29,17 @@ class AjustesScreen extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Presupuesto mensual'),
+        title: Text(l10n.presupuestoMensual),
         content: TextField(
           controller: controller,
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(hintText: '0,00'),
+          decoration: InputDecoration(hintText: l10n.hintImporte),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancelar),
           ),
           TextButton(
             onPressed: () {
@@ -43,7 +48,7 @@ class AjustesScreen extends StatelessWidget {
               ajustes.setPresupuestoMensual(valor);
               Navigator.of(ctx).pop();
             },
-            child: const Text('Guardar'),
+            child: Text(l10n.guardar),
           ),
         ],
       ),
@@ -55,41 +60,42 @@ class AjustesScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
     final ajustes = context.watch<AjustesProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Ajustes')),
+      appBar: AppBar(title: Text(l10n.ajustes)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
-            Text('TEMA', style: theme.textTheme.labelSmall),
+            Text(l10n.tema, style: theme.textTheme.labelSmall),
             const SizedBox(height: 12),
             _OpcionesChip(
-              opciones: const [
-                (id: TemaAjuste.system, etiqueta: 'Sistema'),
-                (id: TemaAjuste.light, etiqueta: 'Claro'),
-                (id: TemaAjuste.dark, etiqueta: 'Oscuro'),
+              opciones: [
+                (id: TemaAjuste.system, etiqueta: l10n.sistemaTema),
+                (id: TemaAjuste.light, etiqueta: l10n.claroTema),
+                (id: TemaAjuste.dark, etiqueta: l10n.oscuroTema),
               ],
               valorActual: ajustes.tema,
               onSeleccionar: ajustes.setTema,
             ),
             const SizedBox(height: 28),
-            Text('MODO DE LA APP', style: theme.textTheme.labelSmall),
+            Text(l10n.modoApp, style: theme.textTheme.labelSmall),
             const SizedBox(height: 12),
             _OpcionesChip(
-              opciones: const [
-                (id: ModoApp.personal, etiqueta: 'Personal'),
-                (id: ModoApp.empresa, etiqueta: 'Empresa'),
+              opciones: [
+                (id: ModoApp.personal, etiqueta: l10n.modoPersonal),
+                (id: ModoApp.empresa, etiqueta: l10n.modoEmpresa),
               ],
               valorActual: ajustes.modoApp,
               onSeleccionar: (modo) => cambiarModoApp(context, modo),
             ),
             const SizedBox(height: 28),
-            Text('PREFERENCIAS', style: theme.textTheme.labelSmall),
+            Text(l10n.preferencias, style: theme.textTheme.labelSmall),
             const SizedBox(height: 12),
             const _PreferenciasSection(),
             const SizedBox(height: 28),
-            Text('PRESUPUESTO MENSUAL', style: theme.textTheme.labelSmall),
+            Text(l10n.presupuesto, style: theme.textTheme.labelSmall),
             const SizedBox(height: 12),
             InkWell(
               borderRadius: BorderRadius.circular(AppTheme.cardRadius),
@@ -110,11 +116,11 @@ class AjustesScreen extends StatelessWidget {
                           Text(
                             ajustes.presupuestoMensual > 0
                                 ? formatearImporte(ajustes.presupuestoMensual, moneda: ajustes.moneda)
-                                : 'Sin presupuesto definido',
+                                : l10n.sinPresupuestoDefinido,
                             style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 2),
-                          Text('Tocar para editar', style: theme.textTheme.bodySmall),
+                          Text(l10n.tocarParaEditar, style: theme.textTheme.bodySmall),
                         ],
                       ),
                     ),
@@ -124,7 +130,39 @@ class AjustesScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 28),
-            Text('SEGURIDAD', style: theme.textTheme.labelSmall),
+            Text(l10n.categoriasLabel, style: theme.textTheme.labelSmall),
+            const SizedBox(height: 12),
+            InkWell(
+              borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const CategoriasScreen()),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.cardTheme.color,
+                  borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.misCategorias,
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, size: 18, color: colors.textTertiary),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 28),
+            Text(l10n.kashAiLabel, style: theme.textTheme.labelSmall),
+            const SizedBox(height: 12),
+            _KashAiSection(consultasRestantes: ajustes.kashAiConsultasRestantes),
+            const SizedBox(height: 28),
+            Text(l10n.seguridad, style: theme.textTheme.labelSmall),
             const SizedBox(height: 12),
             const _SeguridadSection(),
           ],
@@ -149,6 +187,7 @@ class _PreferenciasSection extends StatelessWidget {
   ];
 
   void _elegirIdioma(BuildContext context, LocaleProvider localeProvider) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -174,7 +213,7 @@ class _PreferenciasSection extends StatelessWidget {
                   ),
                 ),
               ),
-              const Text('Idioma', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+              Text(l10n.idioma, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
               const SizedBox(height: 12),
               ..._idiomas.map((idioma) {
                 final sel = localeProvider.locale.languageCode == idioma.code;
@@ -196,6 +235,7 @@ class _PreferenciasSection extends StatelessWidget {
   }
 
   void _elegirPais(BuildContext context, LocaleProvider localeProvider) {
+    final l10n = AppLocalizations.of(context)!;
     String query = '';
     showModalBottomSheet<void>(
       context: context,
@@ -231,11 +271,11 @@ class _PreferenciasSection extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const Text('País y moneda', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                      Text(l10n.paisYMoneda, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 10),
                       TextField(
-                        decoration: const InputDecoration(
-                          hintText: 'Buscar país...',
+                        decoration: InputDecoration(
+                          hintText: l10n.buscarPais,
                           prefixIcon: Icon(Icons.search, size: 20),
                           contentPadding: EdgeInsets.symmetric(vertical: 8),
                           isDense: true,
@@ -277,6 +317,7 @@ class _PreferenciasSection extends StatelessWidget {
     final theme  = Theme.of(context);
     final colors = kashColorsOf(context);
     final locale = context.watch<LocaleProvider>();
+    final l10n   = AppLocalizations.of(context)!;
 
     final idiomaActual = _idiomas.firstWhere(
       (i) => i.code == locale.locale.languageCode,
@@ -289,43 +330,154 @@ class _PreferenciasSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTheme.cardRadius),
         border: Border.all(color: colors.border),
       ),
-      child: Column(
-        children: [
-          ListTile(
-            title: const Text('Idioma'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('${idiomaActual.flag} ${idiomaActual.label}', style: theme.textTheme.bodySmall),
-                const SizedBox(width: 4),
-                Icon(Icons.chevron_right, size: 18, color: colors.textTertiary),
-              ],
+      child: Material(
+        type: MaterialType.transparency,
+        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+        child: Column(
+          children: [
+            ListTile(
+              title: Text(l10n.idioma),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('${idiomaActual.flag} ${idiomaActual.label}', style: theme.textTheme.bodySmall),
+                  const SizedBox(width: 4),
+                  Icon(Icons.chevron_right, size: 18, color: colors.textTertiary),
+                ],
+              ),
+              onTap: () => _elegirIdioma(context, locale),
             ),
-            onTap: () => _elegirIdioma(context, locale),
-          ),
-          Divider(height: 1, color: colors.border),
-          ListTile(
-            title: const Text('País'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('${locale.pais.emoji} ${locale.pais.nombre}', style: theme.textTheme.bodySmall),
-                const SizedBox(width: 4),
-                Icon(Icons.chevron_right, size: 18, color: colors.textTertiary),
-              ],
+            Divider(height: 1, color: colors.border),
+            ListTile(
+              title: Text(l10n.pais),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('${locale.pais.emoji} ${locale.pais.nombre}', style: theme.textTheme.bodySmall),
+                  const SizedBox(width: 4),
+                  Icon(Icons.chevron_right, size: 18, color: colors.textTertiary),
+                ],
+              ),
+              onTap: () => _elegirPais(context, locale),
             ),
-            onTap: () => _elegirPais(context, locale),
-          ),
-          Divider(height: 1, color: colors.border),
-          ListTile(
-            title: const Text('Moneda'),
-            trailing: Text(
-              '${locale.pais.simbolo}  ${locale.pais.moneda}',
-              style: theme.textTheme.bodySmall?.copyWith(color: colors.textTertiary),
+            Divider(height: 1, color: colors.border),
+            ListTile(
+              title: Text(l10n.moneda),
+              trailing: Text(
+                '${locale.pais.simbolo}  ${locale.pais.moneda}',
+                style: theme.textTheme.bodySmall?.copyWith(color: colors.textTertiary),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+}
+
+// ─── Sección de Kash AI ─────────────────────────────────────────────────────
+
+class _KashAiSection extends StatefulWidget {
+  const _KashAiSection({required this.consultasRestantes});
+
+  final int consultasRestantes;
+
+  @override
+  State<_KashAiSection> createState() => _KashAiSectionState();
+}
+
+class _KashAiSectionState extends State<_KashAiSection> {
+  final _controller = TextEditingController();
+  bool _loading = true;
+  bool _tieneClave = false;
+  bool _mostrarClave = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargar();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _cargar() async {
+    final clave = await KashAiService.getApiKey();
+    if (!mounted) return;
+    setState(() {
+      _controller.text = clave ?? '';
+      _tieneClave = clave != null && clave.isNotEmpty;
+      _loading = false;
+    });
+  }
+
+  Future<void> _guardar() async {
+    final l10n = AppLocalizations.of(context)!;
+    await KashAiService.setApiKey(_controller.text);
+    if (!mounted) return;
+    setState(() => _tieneClave = _controller.text.trim().isNotEmpty);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_tieneClave ? l10n.apiKeyGuardada : l10n.apiKeyEliminada)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme  = Theme.of(context);
+    final colors = kashColorsOf(context);
+    final l10n   = AppLocalizations.of(context)!;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+        border: Border.all(color: colors.border),
+      ),
+      child: _loading
+          ? const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Center(child: CircularProgressIndicator(strokeWidth: 1.5)),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.claveApiAnthropic,
+                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _tieneClave
+                      ? l10n.kashAiActivo(widget.consultasRestantes)
+                      : l10n.kashAiInactivo,
+                  style: theme.textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _controller,
+                  obscureText: !_mostrarClave,
+                  decoration: InputDecoration(
+                    hintText: l10n.skAntHint,
+                    suffixIcon: IconButton(
+                      icon: Icon(_mostrarClave ? Icons.visibility_off : Icons.visibility, size: 18),
+                      onPressed: () => setState(() => _mostrarClave = !_mostrarClave),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: KashBounceButton(
+                    onPressed: _guardar,
+                    child: Text(l10n.guardar),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
@@ -371,16 +523,17 @@ class _SeguridadSectionState extends State<_SeguridadSection> {
   // ── Deshabilitar auth ──────────────────────────────────────────────────────
 
   Future<void> _deshabilitarAuth() async {
+    final l10n = AppLocalizations.of(context)!;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Desactivar protección'),
-        content: const Text('La app ya no pedirá PIN ni biometría al abrirse. ¿Continuar?'),
+        title: Text(l10n.desactivarProteccion),
+        content: Text(l10n.desactivarProteccionMsg),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l10n.cancelar)),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Desactivar', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.desactivar, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -393,13 +546,14 @@ class _SeguridadSectionState extends State<_SeguridadSection> {
   // ── Cambiar PIN ────────────────────────────────────────────────────────────
 
   Future<void> _cambiarPin() async {
+    final l10n = AppLocalizations.of(context)!;
     final pin = await Navigator.of(context).push<String>(
       MaterialPageRoute(builder: (_) => const _SetPinScreen(requireCurrentPin: true)),
     );
     if (pin == null || !mounted) return;
     await AuthService.savePin(pin);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('PIN actualizado')),
+      SnackBar(content: Text(l10n.pinActualizado)),
     );
   }
 
@@ -407,6 +561,7 @@ class _SeguridadSectionState extends State<_SeguridadSection> {
   Widget build(BuildContext context) {
     final theme  = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n   = AppLocalizations.of(context)!;
 
     if (_loading) {
       return const Center(child: Padding(
@@ -425,8 +580,8 @@ class _SeguridadSectionState extends State<_SeguridadSection> {
         children: [
           // Bloqueo con biometría
           SwitchListTile(
-            title: const Text('Bloqueo con biometría'),
-            subtitle: const Text('Huella o Face ID al entrar'),
+            title: Text(l10n.bloqueoApp),
+            subtitle: Text(l10n.huellaOFaceId),
             value: _authEnabled,
             activeThumbColor: Colors.black,
             activeTrackColor: theme.colorScheme.primary,
@@ -435,15 +590,15 @@ class _SeguridadSectionState extends State<_SeguridadSection> {
           if (_authEnabled) ...[
             Divider(height: 1, color: colors.border),
             ListTile(
-              title: const Text('Cambiar PIN'),
+              title: Text(l10n.cambiarPin),
               trailing: Icon(Icons.chevron_right, color: colors.textTertiary),
               onTap: _cambiarPin,
             ),
           ],
           Divider(height: 1, color: colors.border),
           SwitchListTile(
-            title: const Text('Bloquear capturas de pantalla'),
-            subtitle: const Text('Pantalla negra en el multitarea'),
+            title: Text(l10n.bloqueoCapturas),
+            subtitle: Text(l10n.pantallaNegraMultitarea),
             value: _blockCapture,
             activeThumbColor: Colors.black,
             activeTrackColor: theme.colorScheme.primary,
@@ -500,10 +655,11 @@ class _SetPinScreenState extends State<_SetPinScreen> with TickerProviderStateMi
   }
 
   String get _title {
+    final l10n = AppLocalizations.of(context)!;
     switch (_step) {
-      case 0: return 'PIN actual';
-      case 1: return 'Nuevo PIN';
-      case 2: return 'Confirmar PIN';
+      case 0: return l10n.pinActual;
+      case 1: return l10n.nuevoPin;
+      case 2: return l10n.confirmarPin;
       default: return '';
     }
   }
@@ -519,6 +675,7 @@ class _SetPinScreenState extends State<_SetPinScreen> with TickerProviderStateMi
   }
 
   Future<void> _advance() async {
+    final l10n = AppLocalizations.of(context)!;
     final pinStr = _input.join();
 
     if (_step == 0) {
@@ -528,7 +685,7 @@ class _SetPinScreenState extends State<_SetPinScreen> with TickerProviderStateMi
       if (result.ok) {
         setState(() { _input.clear(); _step = 1; _errorText = ''; });
       } else {
-        setState(() { _input.clear(); _errorText = result.locked ? 'Bloqueado' : 'PIN incorrecto'; });
+        setState(() { _input.clear(); _errorText = result.locked ? l10n.bloqueado : l10n.pinIncorrecto; });
         _shakeCtrl.forward(from: 0);
       }
       return;
@@ -545,7 +702,7 @@ class _SetPinScreenState extends State<_SetPinScreen> with TickerProviderStateMi
       if (pinStr == _newPin) {
         Navigator.of(context).pop(_newPin);
       } else {
-        setState(() { _input.clear(); _errorText = 'Los PINs no coinciden'; });
+        setState(() { _input.clear(); _errorText = l10n.pinesNoCoinciden; });
         _shakeCtrl.forward(from: 0);
       }
     }

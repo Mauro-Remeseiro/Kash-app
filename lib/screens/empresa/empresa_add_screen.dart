@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
+import '../../models/categoria.dart';
 import '../../models/cuenta.dart';
 import '../../models/movimiento.dart';
 import '../../providers/ajustes_provider.dart';
+import '../../providers/categorias_provider.dart';
 import '../../providers/cuentas_provider.dart';
 import '../../providers/empleados_provider.dart';
 import '../../providers/movimientos_provider.dart';
 import '../../theme/kash_colors.dart';
-import '../../utils/constants.dart';
+import '../../widgets/bounce_button.dart';
+import '../../widgets/categoria_form_sheet.dart';
 import '../../widgets/category_grid.dart';
+import '../../widgets/kash_toast.dart';
 
 class EmpresaAddScreen extends StatefulWidget {
   const EmpresaAddScreen({super.key});
@@ -23,7 +28,7 @@ class _EmpresaAddScreenState extends State<EmpresaAddScreen> {
   final _conceptoController = TextEditingController();
 
   String _tipo = TipoMovimiento.gasto;
-  String? _categoriaId;
+  int? _categoriaId;
   int? _cuentaId;
   int? _empleadoId;
   bool _guardando = false;
@@ -40,6 +45,13 @@ class _EmpresaAddScreenState extends State<EmpresaAddScreen> {
   bool get _formularioValido =>
       (_importe ?? 0) > 0 && _categoriaId != null && _cuentaId != null && !_guardando;
 
+  Categoria? _categoriaEmpleados(CategoriasProvider categoriasProvider) {
+    for (final c in categoriasProvider.categorias) {
+      if (c.nombre.toLowerCase() == 'empleados') return c;
+    }
+    return null;
+  }
+
   Future<void> _guardar() async {
     final importe = _importe;
     final categoriaId = _categoriaId;
@@ -51,15 +63,17 @@ class _EmpresaAddScreenState extends State<EmpresaAddScreen> {
     final ajustes = context.read<AjustesProvider>();
     final movimientosProvider = context.read<MovimientosProvider>();
     final cuentasProvider = context.read<CuentasProvider>();
+    final categoriasProvider = context.read<CategoriasProvider>();
+    final categoriaEmpleados = _categoriaEmpleados(categoriasProvider);
 
     final concepto = _conceptoController.text.trim();
     final movimiento = Movimiento(
       tipo: _tipo,
       importe: importe,
       nota: concepto.isEmpty ? null : concepto,
-      categoria: categoriaId,
+      categoriaId: categoriaId,
       cuentaId: cuentaId,
-      empleadoId: categoriaId == 'empleados' ? _empleadoId : null,
+      empleadoId: categoriaId == categoriaEmpleados?.id ? _empleadoId : null,
       fecha: DateTime.now(),
       modo: ajustes.modoApp,
       aprobado: true,
@@ -68,6 +82,7 @@ class _EmpresaAddScreenState extends State<EmpresaAddScreen> {
     await movimientosProvider.agregarMovimiento(movimiento, cuentasProvider: cuentasProvider);
 
     if (!mounted) return;
+    mostrarKashToast(context, AppLocalizations.of(context)!.movimientoGuardado);
     Navigator.of(context).pop();
   }
 
@@ -75,23 +90,27 @@ class _EmpresaAddScreenState extends State<EmpresaAddScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
     final ajustes = context.watch<AjustesProvider>();
     final cuentas = context.watch<CuentasProvider>().cuentas;
     final empleadosActivos = context.watch<EmpleadosProvider>().empleadosActivos;
-    final categorias = categoriasParaModo(ajustes.modoApp);
+    final categoriasProvider = context.watch<CategoriasProvider>();
+    final categorias = categoriasProvider.paraTipo(_tipo);
+    final categoriaEmpleados = _categoriaEmpleados(categoriasProvider);
 
     _cuentaId ??= context.read<CuentasProvider>().cuentaPrincipal?.id ??
         (cuentas.isNotEmpty ? cuentas.first.id : null);
 
     final esGasto = _tipo == TipoMovimiento.gasto;
-    final mostrarPillsEmpleado = _categoriaId == 'empleados' && empleadosActivos.isNotEmpty;
+    final mostrarPillsEmpleado =
+        _categoriaId == categoriaEmpleados?.id && empleadosActivos.isNotEmpty;
 
     if (!mostrarPillsEmpleado) {
       _empleadoId = null;
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Nuevo movimiento')),
+      appBar: AppBar(title: Text(l10n.nuevoMovimiento)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
@@ -111,9 +130,9 @@ class _EmpresaAddScreenState extends State<EmpresaAddScreen> {
                 style: theme.textTheme.displayLarge?.copyWith(
                   color: esGasto ? colors.negative : colors.positive,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText: '0,00',
+                  hintText: l10n.hintImporte,
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -123,24 +142,30 @@ class _EmpresaAddScreenState extends State<EmpresaAddScreen> {
               controller: _conceptoController,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
-              decoration: const InputDecoration(
-                hintText: 'Concepto (p. ej. Factura proveedor)',
+              decoration: InputDecoration(
+                hintText: l10n.conceptoHint,
               ),
             ),
             const SizedBox(height: 28),
-            Text('CATEGORÍA', style: theme.textTheme.labelSmall),
+            Text(l10n.categoriaLabel, style: theme.textTheme.labelSmall),
             const SizedBox(height: 12),
             CategoryGrid(
               categorias: categorias,
               seleccionada: _categoriaId,
               onSeleccionar: (id) => setState(() => _categoriaId = id),
+              onAgregar: () async {
+                final nueva = await mostrarFormularioCategoria(context, modo: ajustes.modoApp);
+                if (nueva == null || !mounted) return;
+                final creada = await categoriasProvider.agregarCategoria(nueva);
+                setState(() => _categoriaId = creada.id);
+              },
             ),
             const SizedBox(height: 28),
-            Text('CUENTA', style: theme.textTheme.labelSmall),
+            Text(l10n.cuentaLabel, style: theme.textTheme.labelSmall),
             const SizedBox(height: 12),
             if (cuentas.isEmpty)
               Text(
-                'Crea primero una cuenta para poder guardar movimientos.',
+                l10n.crearCuentaPrimero,
                 style: theme.textTheme.bodySmall,
               )
             else
@@ -151,13 +176,13 @@ class _EmpresaAddScreenState extends State<EmpresaAddScreen> {
               ),
             if (mostrarPillsEmpleado) ...[
               const SizedBox(height: 28),
-              Text('ASIGNAR A EMPLEADO', style: theme.textTheme.labelSmall),
+              Text(l10n.asignarAEmpleado, style: theme.textTheme.labelSmall),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _buildEmpleadoPill(theme, colors, null, 'Sin asignar'),
+                  _buildEmpleadoPill(theme, colors, null, l10n.sinAsignar),
                   ...empleadosActivos.map(
                     (empleado) => _buildEmpleadoPill(theme, colors, empleado.id, empleado.nombre),
                   ),
@@ -165,7 +190,7 @@ class _EmpresaAddScreenState extends State<EmpresaAddScreen> {
               ),
             ],
             const SizedBox(height: 36),
-            ElevatedButton(
+            KashBounceButton(
               onPressed: _formularioValido ? _guardar : null,
               child: _guardando
                   ? const SizedBox(
@@ -173,7 +198,7 @@ class _EmpresaAddScreenState extends State<EmpresaAddScreen> {
                       height: 22,
                       child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.black),
                     )
-                  : const Text('Guardar'),
+                  : Text(l10n.guardar),
             ),
           ],
         ),
@@ -230,6 +255,7 @@ class _ToggleTipo extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.all(4),
@@ -240,8 +266,8 @@ class _ToggleTipo extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _opcion(theme, colors, 'Gasto', esGasto, () => onChanged(true))),
-          Expanded(child: _opcion(theme, colors, 'Ingreso', !esGasto, () => onChanged(false))),
+          Expanded(child: _opcion(theme, colors, l10n.gasto, esGasto, () => onChanged(true))),
+          Expanded(child: _opcion(theme, colors, l10n.ingreso, !esGasto, () => onChanged(false))),
         ],
       ),
     );

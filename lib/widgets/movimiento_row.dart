@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../models/categoria.dart';
 import '../models/movimiento.dart';
 import '../theme/app_theme.dart';
 import '../theme/kash_colors.dart';
-import '../utils/constants.dart';
 import '../utils/formatters.dart';
 
 class MovimientoRow extends StatelessWidget {
   const MovimientoRow({
     super.key,
     required this.movimiento,
+    required this.categoria,
     required this.moneda,
     this.onTap,
   });
 
   final Movimiento movimiento;
+  final Categoria categoria;
   final String moneda;
   final VoidCallback? onTap;
 
@@ -22,7 +24,6 @@ class MovimientoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = kashColorsOf(context);
-    final categoria = categoriaPorId(movimiento.categoria);
     final colorImporte = movimiento.esIngreso ? colors.positive : colors.negative;
     final signo = movimiento.esIngreso ? '+' : '−';
 
