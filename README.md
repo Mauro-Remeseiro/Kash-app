@@ -4,7 +4,12 @@ App móvil de finanzas personales y empresariales construida con Flutter. Permit
 
 ## Capturas
 
-*(añade aquí 3-4 capturas del emulador cuando tengas las pantallas pulidas)*
+<p align="center">
+  <img src="screenshots/01_onboarding_idioma.png" width="22%" alt="Onboarding idioma" />
+  <img src="screenshots/03_onboarding_modo.png"   width="22%" alt="Selección de modo" />
+  <img src="screenshots/04_onboarding_seguridad.png" width="22%" alt="Seguridad y PIN" />
+  <img src="screenshots/05_home.png"              width="22%" alt="Pantalla principal" />
+</p>
 
 ## Características
 
